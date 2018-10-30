@@ -12,7 +12,7 @@
 - Retrofit(http통신)
 - Firebase(Google Analytics)
 - Jsoup(크롤링)
-- Glide(이미지)
+- Glide(이미지, GIF)
 - StyleableToast(스타일토스트)
 - WebRtc(영상통화)
 - OpenCV(얼굴검출)
