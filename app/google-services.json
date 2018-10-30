@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "717938423880",
+    "firebase_url": "https://bulnati-6c9d5.firebaseio.com",
+    "project_id": "bulnati-6c9d5",
+    "storage_bucket": "bulnati-6c9d5.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:717938423880:android:03efef0b3d4f9dff",
+        "android_client_info": {
+          "package_name": "com.uminoh.bulnati"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "717938423880-5rvr6gr6fch3o0hghfuih1mmjp9bkrmf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyALgnbsJl9Egzj9eP2l0aQhkWwv4JkZJic"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

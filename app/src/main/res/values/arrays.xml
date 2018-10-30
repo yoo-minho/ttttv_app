@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="program">
+        <item >월요일예능</item>
+        <item >화요일예능</item>
+        <item >수요일예능</item>
+        <item >목요일예능</item>
+        <item >금요일예능</item>
+        <item >토요일예능</item>
+        <item >일요일예능</item>
+    </string-array>
+</resources>
