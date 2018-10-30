@@ -47,10 +47,6 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class CfrActivity extends AppCompatActivity {
 
-    String cfrUrl = "https://openapi.naver.com";
-    String clientId = "z8V3UoaUhXW7Qg8A_vGf";
-    String clientSecret = "AupOnrkpk8";
-
     //웹 통신
     Retrofit retrofit;
     ApiService apiService;
@@ -83,7 +79,7 @@ public class CfrActivity extends AppCompatActivity {
 
         //주소를 기반으로 객체 생성
         retrofit = new Retrofit.Builder()
-                .baseUrl(cfrUrl)
+                .baseUrl(SecretKey.cfrUrl)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         apiService = retrofit.create(ApiService.class);
@@ -129,7 +125,7 @@ public class CfrActivity extends AppCompatActivity {
                     cfrProgressBar.setVisibility(View.VISIBLE);
                     RequestBody reBody = RequestBody.create(MediaType.parse("image/jpeg"), mFile);
                     MultipartBody.Part body = MultipartBody.Part.createFormData("image",mFile.getName(), reBody);
-                    Call<NaverRepo> call = apiService.naverRepo(clientId, clientSecret, body);
+                    Call<NaverRepo> call = apiService.naverRepo(SecretKey.clientId, SecretKey.clientSecret, body);
                     call.enqueue(new Callback<NaverRepo>() {
                         @Override
                         public void onResponse(Call<NaverRepo> call, Response<NaverRepo> response) {

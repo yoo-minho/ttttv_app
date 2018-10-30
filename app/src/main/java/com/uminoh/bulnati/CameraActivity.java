@@ -20,6 +20,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.Toast;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -47,7 +48,7 @@ public class CameraActivity extends AppCompatActivity implements CameraBridgeVie
     private Mat matResult;
 
     public native long loadCascade(String cascadeFileName );
-    public native void detect(long cascadeClassifier_face,
+    public native int detect(long cascadeClassifier_face,
                               long cascadeClassifier_eye, long matAddrInput, long matAddrResult);
     public long cascadeClassifier_face = 0;
     public long cascadeClassifier_eye = 0;
@@ -192,8 +193,12 @@ public class CameraActivity extends AppCompatActivity implements CameraBridgeVie
             matResult = new Mat(matInput.rows(), matInput.cols(), matInput.type());
             Core.flip(matInput, matInput, 1);
 
-            detect(cascadeClassifier_face,cascadeClassifier_eye, matInput.getNativeObjAddr(),
+            int ret = detect(cascadeClassifier_face,cascadeClassifier_eye, matInput.getNativeObjAddr(),
                     matResult.getNativeObjAddr());
+
+            if(ret != 0){
+                Toast.makeText(this, "얼굴이"+ret+"개", Toast.LENGTH_SHORT).show();
+            }
 
 //        } catch (InterruptedException e) {
 //            e.printStackTrace();

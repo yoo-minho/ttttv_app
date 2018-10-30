@@ -51,7 +51,7 @@ Java_com_uminoh_bulnati_CameraActivity_loadCascade(JNIEnv *env,
 
 
 extern "C"
-JNIEXPORT void JNICALL
+JNIEXPORT jint JNICALL
 Java_com_uminoh_bulnati_CameraActivity_detect(JNIEnv *env, jobject instance,
                                                       jlong cascadeClassifier_face,
                                                       jlong cascadeClassifier_eye,
@@ -61,6 +61,8 @@ Java_com_uminoh_bulnati_CameraActivity_detect(JNIEnv *env, jobject instance,
     Mat &img_input = *(Mat *) matAddrInput;
     Mat &img_result = *(Mat *) matAddrResult;
 
+    int ret = 0;
+
     img_result = img_input.clone();
 
     std::vector<Rect> faces;
@@ -69,11 +71,12 @@ Java_com_uminoh_bulnati_CameraActivity_detect(JNIEnv *env, jobject instance,
     equalizeHist(img_gray, img_gray);
     Mat img_resize;
     float resizeRatio = resize(img_gray, img_resize, 640);
-    //-- Detect faces
 
+    //-- Detect faces
     ((CascadeClassifier *) cascadeClassifier_face)->detectMultiScale( img_resize, faces, 1.1, 3, 0|CASCADE_SCALE_IMAGE, Size(30, 30) );
-    __android_log_print(ANDROID_LOG_DEBUG, (char *) "native-lib :: ",
-                        (char *) "face %d found ", faces.size());
+//    __android_log_print(ANDROID_LOG_DEBUG, (char *) "native-lib :: ",
+//                        (char *) "face %d found ", faces.size());
+    ret = faces.size();
 
 
     for (int i = 0; i < faces.size(); i++) {
@@ -98,4 +101,6 @@ Java_com_uminoh_bulnati_CameraActivity_detect(JNIEnv *env, jobject instance,
             circle( img_result, eye_center, radius, Scalar( 255, 0, 0 ), 30, 8, 0 );
         }
     }
+
+    return ret;
 }

@@ -18,7 +18,6 @@ import android.widget.Toast;
 import com.muddzdev.styleabletoast.StyleableToast;
 import com.uminoh.bulnati.RecyclerUtil.AdapterRecyclerChat;
 import com.uminoh.bulnati.RecyclerUtil.DataChat;
-import com.uminoh.bulnati.TcpUtil.ConstantsTcp;
 import com.uminoh.bulnati.TcpUtil.ReceiverThread;
 import com.uminoh.bulnati.TcpUtil.SenderThread;
 
@@ -195,7 +194,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void run() {
                 try {
-                    mSocket = new Socket(ConstantsTcp.ip , ConstantsTcp.port);
+                    mSocket = new Socket(SecretKey.ip , SecretKey.port);
 
                     // 두번째 파라메터 로는 본인의 닉네임을 적어줍니다.
                     mThread1 = new SenderThread(mSocket, login_nick);

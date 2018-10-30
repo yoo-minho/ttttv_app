@@ -1,7 +1,6 @@
 package com.uminoh.bulnati;
 
 import com.uminoh.bulnati.CfrUtil.NaverRepo;
-import com.uminoh.bulnati.TcpUtil.ConstantsTcp;
 
 import okhttp3.MultipartBody;
 import okhttp3.ResponseBody;

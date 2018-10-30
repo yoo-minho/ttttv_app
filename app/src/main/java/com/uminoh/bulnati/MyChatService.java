@@ -22,7 +22,6 @@ import android.util.Log;
 import android.widget.Toast;
 
 import com.muddzdev.styleabletoast.StyleableToast;
-import com.uminoh.bulnati.TcpUtil.ConstantsTcp;
 import com.uminoh.bulnati.TcpUtil.ReceiverThread;
 import com.uminoh.bulnati.TcpUtil.SenderThread;
 
@@ -78,7 +77,7 @@ public class MyChatService extends Service implements ReceiverThread.OnReceiveLi
             @Override
             public void run() {
                 try {
-                    mSocket = new Socket(ConstantsTcp.ip, ConstantsTcp.port);
+                    mSocket = new Socket(SecretKey.ip, SecretKey.port);
 
                     // 두번째 파라메터 로는 본인의 닉네임을 적어줍니다.
                     mThread1 = new SenderThread(mSocket,login_nick);
