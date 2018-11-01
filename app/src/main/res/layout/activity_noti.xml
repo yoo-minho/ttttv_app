@@ -30,7 +30,7 @@
             android:ellipsize="end"
             android:gravity="center"
             android:singleLine="true"
-            android:text="알림 받는 채널"
+            android:text="내 채팅방"
             android:textSize="22sp"
             android:textStyle="bold" />
 
@@ -41,19 +41,9 @@
             android:layout_gravity="center_vertical"
             android:layout_weight="1"
             android:backgroundTint="@color/white"
-            android:visibility="gone"
+            android:visibility="invisible"
             android:onClick="notiOn"
             app:srcCompat="@drawable/ic_notifications_grey_24dp" />
-
-        <ImageButton
-            android:id="@+id/all_noti_off"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_weight="1"
-            android:backgroundTint="@color/white"
-            android:onClick="notiOff"
-            app:srcCompat="@drawable/ic_notifications_black_24dp" />
 
     </LinearLayout>
 

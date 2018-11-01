@@ -8,6 +8,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.uminoh.bulnati.R;
@@ -57,6 +58,10 @@ public class AdapterRecyclerChat extends RecyclerView.Adapter<AdapterRecyclerCha
         TextView bubbleMe;
         TextView dateYou;
         TextView dateMe;
+        TextView entText;
+        TextView entText2;
+        TextView entText3;
+        LinearLayout entLinear;
 
         //뷰홀더와 뷰 연결
         ViewHolder(@NonNull View itemView) {
@@ -68,6 +73,10 @@ public class AdapterRecyclerChat extends RecyclerView.Adapter<AdapterRecyclerCha
             bubbleMe = itemView.findViewById(R.id.bubble_me_text);
             dateYou = itemView.findViewById(R.id.date_text_you);
             dateMe = itemView.findViewById(R.id.date_text_me);
+            entText = itemView.findViewById(R.id.ent_text);
+            entText2 = itemView.findViewById(R.id.ent_text2);
+            entText3 = itemView.findViewById(R.id.ent_text3);
+            entLinear = itemView.findViewById(R.id.ent_linear);
         }
     }
 
@@ -102,9 +111,9 @@ public class AdapterRecyclerChat extends RecyclerView.Adapter<AdapterRecyclerCha
 
                 int showMe = 0;
                 int showYou = 0;
+                int showEnt = 0;
 
                 //시작
-                viewHolder.nickname.setText(mItemList.get(i).getNickname());
                 if (mItemList.get(i).getDate() == null || mItemList.get(i).getDate().length() < 17) {
                     viewHolder.dateYou.setText(mItemList.get(i).getDate());
                     viewHolder.dateMe.setText(mItemList.get(i).getDate());
@@ -120,20 +129,44 @@ public class AdapterRecyclerChat extends RecyclerView.Adapter<AdapterRecyclerCha
                     }
                 }
 
-                //오늘과 비교하여, 시간, 날짜 표기법 달리함
-                if(isMe){
-                    viewHolder.nickname.setText(mItemList.get(i).getNickname()+"(본인)");
-                    viewHolder.bubbleYou.setText("");
-                    viewHolder.bubbleMe.setText(mItemList.get(i).getMessage());
+                if(mItemList.get(i).getMessage().equals("입장")){
+
+                    viewHolder.entText.setText(mItemList.get(i).getNickname()+"님이 들어왔습니다.");
+                    viewHolder.entText2.setText("운영 정책을 위반한 메시지로");
+                    viewHolder.entText3.setText("채팅 이용에 제한이 있을 수 있습니다.");
                     showYou = View.INVISIBLE;
-                } else {
-                    viewHolder.bubbleYou.setText(mItemList.get(i).getMessage());
-                    viewHolder.bubbleMe.setText("");
                     showMe = View.INVISIBLE;
+
+                } else if (mItemList.get(i).getMessage().equals("퇴장")){
+
+                    viewHolder.entText.setText(mItemList.get(i).getNickname()+"님이 나갔습니다.");
+                    viewHolder.entText2.setText("위 인원이 채팅 규칙을 준수하지 않았다면");
+                    viewHolder.entText3.setText("신고 해주시길 바랍니다!");
+                    showYou = View.INVISIBLE;
+                    showMe = View.INVISIBLE;
+
+                } else {
+
+                    //오늘과 비교하여, 시간, 날짜 표기법 달리함
+                    if(isMe){
+                        viewHolder.nickname.setText(mItemList.get(i).getNickname()+"(본인)");
+                        viewHolder.bubbleYou.setText("");
+                        viewHolder.bubbleMe.setText(mItemList.get(i).getMessage());
+                        showYou = View.INVISIBLE;
+                        showEnt = View.INVISIBLE;
+                    } else {
+                        viewHolder.nickname.setText(mItemList.get(i).getNickname());
+                        viewHolder.bubbleYou.setText(mItemList.get(i).getMessage());
+                        viewHolder.bubbleMe.setText("");
+                        showMe = View.INVISIBLE;
+                        showEnt = View.INVISIBLE;
+                    }
+
                 }
 
                 viewHolder.layoutMe.setVisibility(showMe);
                 viewHolder.layoutYou.setVisibility(showYou);
+                viewHolder.entLinear.setVisibility(showEnt);
 
                 if (mListener != null) {
                     viewHolder.bubbleMe.setOnClickListener(new View.OnClickListener() {
@@ -149,7 +182,6 @@ public class AdapterRecyclerChat extends RecyclerView.Adapter<AdapterRecyclerCha
                         }
                     });
                 }
-
     }
 
     //----------------------------------------------------------------------------------------------

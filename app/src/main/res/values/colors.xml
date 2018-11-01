@@ -27,6 +27,9 @@
     <color name="chat_me_alpha">#55ffeb34</color>
 
     <color name="black_alpha">#33000000</color>
+    <color name="black_alpha_alpha">#aa000000</color>
+    <color name="alpha">#00000000</color>
+    <color name="white_alpha">#ccFFFFFF</color>
 
 
 

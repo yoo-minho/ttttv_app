@@ -1,11 +1,14 @@
 package com.uminoh.bulnati;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.Toast;
@@ -14,9 +17,17 @@ import com.muddzdev.styleabletoast.StyleableToast;
 import com.uminoh.bulnati.RecyclerUtil.AdapterRecyclerNoti;
 import com.uminoh.bulnati.RecyclerUtil.DataNoti;
 
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 import retrofit2.Retrofit;
 
 public class NotiActivity extends AppCompatActivity implements AdapterRecyclerNoti.AdapterRecyclerNotiClickListener {
@@ -32,13 +43,13 @@ public class NotiActivity extends AppCompatActivity implements AdapterRecyclerNo
     Retrofit retrofit;
     ApiService apiService;
 
+    String date_str;
+
 
     //리사이클러뷰 (어댑터, 리스트, 리사이클러뷰)
     private AdapterRecyclerNoti mAdapter;
     private List<DataNoti> mChatDataList;
     RecyclerView recyclerView;
-    ImageButton allNotiOn;
-    ImageButton allNotiOff;
 
     //----------------------------------------------------------------------------------------------
     //온크리에이트
@@ -59,9 +70,9 @@ public class NotiActivity extends AppCompatActivity implements AdapterRecyclerNo
         retrofit = new Retrofit.Builder().baseUrl(ApiService.API_URL).build();
         apiService = retrofit.create(ApiService.class);
 
-        //알림
-        allNotiOn = findViewById(R.id.all_noti_on);
-        allNotiOff = findViewById(R.id.all_noti_off);
+        SimpleDateFormat mSimpleDateFormat = new SimpleDateFormat("yyMM월 dd일HHmmssSSaa hh:mm", Locale.KOREA);
+        Date currentTime = new Date();
+        date_str = mSimpleDateFormat.format(currentTime);
 
         //리사이클러뷰 연결
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
@@ -73,12 +84,10 @@ public class NotiActivity extends AppCompatActivity implements AdapterRecyclerNo
         recyclerView.setAdapter(mAdapter);
 
         //리스트 로드
-        getNotiList(true);
+        getNotiList();
 
         if(room_list.equals("")){
-            StyleableToast.makeText(this, "알림 받는 채널이 없습니다!", Toast.LENGTH_SHORT, R.style.mytoast).show();
-            allNotiOn.setVisibility(View.VISIBLE);
-            allNotiOff.setVisibility(View.GONE);
+            StyleableToast.makeText(this, "내 채팅방이 없습니다!", Toast.LENGTH_SHORT, R.style.mytoast).show();
         }
 
     }
@@ -96,33 +105,6 @@ public class NotiActivity extends AppCompatActivity implements AdapterRecyclerNo
     }
 
     //----------------------------------------------------------------------------------------------
-    //스위치작동리스너
-
-    @Override
-    public void SwitchClicked(int i, boolean b) {
-
-        String title = mChatDataList.get(i).getTitle();
-
-        if(b){
-            //추가
-            if(!room_list.contains(title)){
-                lEdit.putString("room_list",room_list+"/"+title);
-                lEdit.commit();
-            }
-
-        } else {
-
-            //삭제
-            if(room_list.contains(title)) {
-                lEdit.putString("room_list", room_list.replace("/" + title, ""));
-                lEdit.commit();
-            }
-
-        }
-
-    }
-
-    //----------------------------------------------------------------------------------------------
     //백버튼
 
     public void back_noti_room(View view) {
@@ -132,7 +114,7 @@ public class NotiActivity extends AppCompatActivity implements AdapterRecyclerNo
     //----------------------------------------------------------------------------------------------
     //알림리스트 로드
 
-    private void getNotiList(boolean b){
+    private void getNotiList(){
 
         mChatDataList.clear();
         String[] rooms = room_list.split("/");
@@ -140,47 +122,14 @@ public class NotiActivity extends AppCompatActivity implements AdapterRecyclerNo
             if(!rooms[i].equals("")){
                 mChatDataList.add(new DataNoti(rooms[i],
                         "",
-                        "",
-                        b));
+                        ""));
             }
         }
         mAdapter.notifyDataSetChanged();
 
         if(room_list.equals("")){
-            StyleableToast.makeText(this, "알림 받는 채널이 없습니다!", Toast.LENGTH_SHORT, R.style.mytoast).show();
-            allNotiOn.setVisibility(View.VISIBLE);
-            allNotiOff.setVisibility(View.GONE);
+            StyleableToast.makeText(this, "내 채팅방이 없습니다!", Toast.LENGTH_SHORT, R.style.mytoast).show();
         }
-
-    }
-
-    //----------------------------------------------------------------------------------------------
-    //전체알림켜기
-
-    public void notiOn(View view) {
-
-        allNotiOn.setVisibility(View.GONE);
-        allNotiOff.setVisibility(View.VISIBLE);
-
-        getNotiList(true);
-
-        lEdit.putString("room_list",room_list);
-        lEdit.commit();
-
-    }
-
-    //----------------------------------------------------------------------------------------------
-    //전체알림끄기
-
-    public void notiOff(View view) {
-
-        allNotiOn.setVisibility(View.VISIBLE);
-        allNotiOff.setVisibility(View.GONE);
-
-        getNotiList(false);
-
-        lEdit.putString("room_list","");
-        lEdit.commit();
 
     }
 
@@ -193,6 +142,6 @@ public class NotiActivity extends AppCompatActivity implements AdapterRecyclerNo
 
         //리스트 로드
         room_list = lp.getString("room_list","");
-        getNotiList(true);
+        getNotiList();
     }
 }

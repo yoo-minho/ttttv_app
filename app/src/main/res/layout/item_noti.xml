@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout
+<LinearLayout xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/noti_list"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
@@ -10,51 +10,37 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="30dp"
-        android:layout_margin="20dp"
+        android:layout_margin="10dp"
         android:orientation="horizontal">
+
+        <ImageButton
+            android:id="@+id/noti_first_img"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@color/white"
+            app:srcCompat="@drawable/ic_live_tv_black_24dp" />
 
         <TextView
             android:id="@+id/noti_title"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="0.7"
+            android:layout_weight="0.3"
             android:ellipsize="end"
-            android:maxLines="1"
             android:gravity="center_vertical"
+            android:maxLines="1"
             android:text="정글의 법칙 in 라스트 인도양"
             android:textColor="@color/black"
             android:textSize="15sp"
             android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/noti_broad"
+        <ImageButton
+            android:id="@+id/noti_second_img"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_weight="1"
-            android:ellipsize="end"
-            android:gravity="center"
-            android:maxLines="1"
-            android:text="채널 SBS"
-            android:textColor="@color/md_grey_500"
-            android:textSize="12sp" />
-
-        <TextView
-            android:id="@+id/noti_week"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1.2"
-            android:ellipsize="end"
-            android:gravity="center"
-            android:maxLines="1"
-            android:text="금"
-            android:textColor="@color/md_grey_500"
-            android:textSize="12sp" />
-
-        <Switch
-            android:id="@+id/noti_switch"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1.2" />
+            android:background="@color/white"
+            app:srcCompat="@drawable/ic_comment_black_oval_bubble_shape" />
 
     </LinearLayout>
 

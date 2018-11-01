@@ -2,17 +2,77 @@
 <android.support.constraint.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@color/chat_back"
-    android:paddingTop="5dp"
+    android:paddingTop="8dp"
     android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/ent_linear"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/black_alpha"
+        android:orientation="vertical"
+        android:visibility="visible"
+        android:padding="5dp"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        app:layout_constraintBottom_toBottomOf="@+id/linearLayout2"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/ent_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="노녹님이 들어왔습니다."
+            android:textColor="@color/white_alpha"
+            android:textSize="10sp" />
+
+        <TextView
+            android:id="@+id/ent_text2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:gravity="center"
+            android:text="운영 정책을 위반한 메시지로"
+            android:textColor="@color/white_alpha"
+            android:textSize="10sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:layout_editor_absoluteY="5dp" />
+
+        <TextView
+            android:id="@+id/ent_text3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:gravity="center"
+            android:text="채팅 이용에 제한이 있을 수 있습니다."
+            android:textColor="@color/white_alpha"
+            android:textSize="10sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:layout_editor_absoluteY="5dp" />
+
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/linearLayout2"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:visibility="visible"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <android.support.constraint.ConstraintLayout
             android:id="@+id/layout_you"
@@ -39,7 +99,7 @@
                         android:paddingLeft="10dp"
                         android:text="상대방"
                         android:textColor="@color/chat_you"
-                        android:textSize="15sp" />
+                        android:textSize="13sp" />
 
                     <TextView
                         android:id="@+id/bubble_you_text"
@@ -50,7 +110,7 @@
                         android:background="@color/chat_you"
                         android:maxWidth="250dp"
                         android:minWidth="100dp"
-                        android:padding="10dp"
+                        android:padding="5dp"
                         android:text="zz"
                         android:textSize="15sp" />
 
@@ -96,11 +156,11 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="0.5"
+                    android:gravity="right"
                     android:paddingRight="10dp"
                     android:text="본인"
-                    android:gravity="right"
                     android:textColor="@color/chat_you"
-                    android:textSize="15sp" />
+                    android:textSize="13sp" />
 
                 <TextView
                     android:id="@+id/bubble_me_text"
@@ -111,7 +171,7 @@
                     android:background="@color/chat_me"
                     android:maxWidth="250dp"
                     android:minWidth="100dp"
-                    android:padding="10dp"
+                    android:padding="5dp"
                     android:text="zzzzzzz"
                     android:textSize="15sp" />
 

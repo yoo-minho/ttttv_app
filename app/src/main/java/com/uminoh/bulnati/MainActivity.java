@@ -1,17 +1,21 @@
 package com.uminoh.bulnati;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.CardView;
@@ -74,15 +78,40 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
     //쉐어드프리퍼런스 : 로그인 유지
     SharedPreferences lp;
     SharedPreferences.Editor lEdit;
-    String room_list;
+    String roomList;
     String nick;
+    String notiOn;
 
     //날짜
     String today;
     String clickToday;
 
-    //서비스리시버
-    ResultReceiver resultReceiver;
+    //로컬브로드캐스트리시버
+    BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String getNick = intent.getStringExtra("nick");
+            String getRoom = intent.getStringExtra("room");
+            String getMsg = intent.getStringExtra("msg");
+//            Toast.makeText(getApplicationContext(), "<"+getRoom+">방에서 새메세지!", Toast.LENGTH_SHORT).show();
+            if(getMsg.equals("입장")){
+                for(int w = 0 ; w < dataList.size() ; w++){
+                    if(dataList.get(w).getProgramTitle().equals(getRoom)){
+                        dataList.get(w).setTotal(dataList.get(w).getTotal()+1);
+                        adapter.notifyItemChanged(w);
+                    }
+                }
+            } else if (getMsg.equals("퇴장")){
+                for(int w = 0 ; w < dataList.size() ; w++){
+                    if(dataList.get(w).getProgramTitle().equals(getRoom)){
+                        dataList.get(w).setTotal(dataList.get(w).getTotal()-1);
+                        adapter.notifyItemChanged(w);
+                    }
+                }
+            }
+
+        }
+    };
 
     //웹 통신
     Retrofit retrofit;
@@ -102,8 +131,6 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
     //노티피케이션
     String room;
     int id = 0;
-
-    int update_complete = 0;
 
     String[] weekDay = { "일요일", "월요일", "화요일", "수요일", "목요일", "금요일", "토요일" };
 
@@ -128,58 +155,92 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
         chatRoomInfo = findViewById(R.id.chat_room_info);
         drawer = findViewById(R.id.drawer);
         menuButton = findViewById(R.id.menu_button);
-
-        //드롭레이아웃
-        final String[] items = {"< SPECIAL MENU >"
-                , "  - 알림 받는 채널"
-                , "  - 랜덤 영상 통화 (1대1)"
-                , "  - 연예인 닮은꼴 찾기"
-                , "  - 미니게임"
-                , "  - 환경설정"
-                , "  - 로그아웃"} ;
-
-        ArrayAdapter baseAdapter = new ArrayAdapter(getApplicationContext(), android.R.layout.simple_list_item_1, items) ;
-        menuButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                drawer.openDrawer(listView);
-            }
-        });
         listView = findViewById(R.id.drawer_menulist) ;
-        listView.setAdapter(baseAdapter) ;
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
 
-                switch (i) {
-                    case 0 : // 스페셜메뉴
-                        break;
-                    case 1 : // 알림관리
-                        Intent i1 = new Intent(getApplicationContext(), NotiActivity.class);
-                        startActivity(i1);
-                        break ;
-                    case 2 : // 랜덤영상채팅
-                        Intent i2 = new Intent(getApplicationContext(), ConnectActivity.class);
-                        startActivity(i2);
-                        break;
-                    case 3 : // 연예인 닮은꼴 찾기
-                        Intent i3 = new Intent(getApplicationContext(), CfrActivity.class);
-                        startActivity(i3);
-                        break ;
-                    case 4 : // 미니게임
-                        break ;
-                    case 5 : // 환경설정
-                        break ;
-                    case 6 : // 로그아웃
-                        logout();
-                        break ;}
-                drawer.closeDrawer(Gravity.RIGHT) ;
-            }
-        });
+        //쉐어드프리퍼런스 연결
+        lp = getSharedPreferences("login", MODE_PRIVATE);
+        lEdit = lp.edit();
+        nick = lp.getString("login_nick","");
+        Log.e("뭐니",nick);
+        if(!lp.getBoolean("login_key",false)){
+            Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
+            startActivity(intent);
+            finish();
+        }
 
         //주소를 기반으로 객체 생성
         retrofit = new Retrofit.Builder().baseUrl(ApiService.API_URL).build();
         apiService = retrofit.create(ApiService.class);
+
+        //룸리스트를 db -> sp로
+        onLoadRoomList();
+
+        menuButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                notiOn = lp.getString("noti_on","  - 메시지 알람 Off");
+
+                //드롭레이아웃
+                final String[] items = {"<"+nick+">"
+                        , "  - 내 채팅방"
+                        , "  - 랜덤 영상 통화 (1대1)"
+                        , "  - 연예인 닮은꼴 찾기"
+                        , notiOn
+                        , "  - 닉네임 변경"
+                        , "  - 로그아웃"} ;
+
+                ArrayAdapter baseAdapter = new ArrayAdapter(getApplicationContext(), android.R.layout.simple_list_item_1, items) ;
+
+                listView.setAdapter(baseAdapter) ;
+
+                listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+
+                        switch (i) {
+                            case 0 : // 스페셜메뉴
+                                break;
+                            case 1 : // 내 채팅방
+                                Intent i1 = new Intent(getApplicationContext(), NotiActivity.class);
+                                startActivity(i1);
+                                break ;
+                            case 2 : // 랜덤영상채팅
+                                Intent i2 = new Intent(getApplicationContext(), ConnectActivity.class);
+                                startActivity(i2);
+                                break;
+                            case 3 : // 연예인 닮은꼴 찾기
+                                Intent i3 = new Intent(getApplicationContext(), CfrActivity.class);
+                                startActivity(i3);
+                                break ;
+                            case 4 : // 전체알람켜기 vs 전체알림끄기
+                                if(notiOn.equals("  - 메시지 알람 On")){
+
+                                    lEdit.putString("noti_on","  - 메시지 알람 Off");
+                                    lEdit.apply();
+                                    StyleableToast.makeText(MainActivity.this, "알람 해제!", Toast.LENGTH_SHORT,R.style.mytoast).show();
+
+                                } else if (notiOn.equals("  - 메시지 알람 Off")){
+
+                                    lEdit.putString("noti_on","  - 메시지 알람 On");
+                                    lEdit.apply();
+                                    StyleableToast.makeText(MainActivity.this, "알람 설정!", Toast.LENGTH_SHORT,R.style.mytoast).show();
+
+                                }
+                                break ;
+                            case 5 : // 닉네임변경
+                                Intent i4 = new Intent(getApplicationContext(), NickActivity.class);
+                                startActivity(i4);
+                                break ;
+                            case 6 : // 로그아웃
+                                logout();
+                                break ;}
+                        drawer.closeDrawer(Gravity.RIGHT) ;
+                    }
+                });
+
+                drawer.openDrawer(listView);
+            }
+        });
 
         //노티피케이션
         Bundle extras = getIntent().getExtras();
@@ -193,16 +254,6 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
                 NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
                 nm.cancel(id);
             }
-        }
-
-        //쉐어드프리퍼런스 연결
-        lp = getSharedPreferences("login", MODE_PRIVATE);
-        lEdit = lp.edit();
-        nick = lp.getString("login_nick","");
-
-        if(!lp.getBoolean("login_key",false)){
-            Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
-            startActivity(intent);
         }
 
         //크롤링요소
@@ -224,20 +275,8 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
         adapter.setOnClickListener(this);
         recyclerView.setAdapter(adapter);
 
-        //서비스 리시버
-        Handler handler = new Handler();
-        resultReceiver = new ResultReceiver(handler){
-            @Override
-            protected void onReceiveResult(int resultCode, Bundle resultData) {
-                super.onReceiveResult(resultCode, resultData);
-                if (resultCode == 1){
-                    String msg = resultData.getString("msg");
-                    if(msg.equals("Succeed!!")){
-                        onLoadProgramRoom(clickToday);
-                    }
-                }
-            }
-        };
+        LocalBroadcastManager.getInstance(this).registerReceiver(mBroadcastReceiver,
+                new IntentFilter("blackJinData"));
 
         //상황에 따라 서비스 실행
         onService();
@@ -304,7 +343,7 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
                 for(int j = 0 ; j < weekDay.length ; j++){
                     onLoadProgram(weekDay[j]+"예능");
                 }
-                StyleableToast.makeText(getApplicationContext(), "방송 정보를 가져옵니다!", Toast.LENGTH_SHORT,R.style.mytoast).show();
+                StyleableToast.makeText(getApplicationContext(), "방송 최신 정보를 가져옵니다!", Toast.LENGTH_SHORT,R.style.mytoast).show();
                 onLoadProgramRoom(clickToday);
             }
         });
@@ -322,9 +361,6 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
                 String result = null;
                 try {
                     result = response.body().string();
-                    if(update_complete == 7){
-                        StyleableToast.makeText(getApplicationContext(), "업데이트 완료!", Toast.LENGTH_SHORT,R.style.mytoast).show();
-                    }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -346,30 +382,32 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
             public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
                 try {
                     dataList.clear();
-                    String result = response.body().string();
-                    if (!result.equals("fail")) {
-                        try {
-                            JSONArray jsonArray = new JSONArray(result);
-                            if(jsonArray.length() == 0){
-                                chatRoomInfo.setVisibility(View.VISIBLE);
-                            } else {
-                                chatRoomInfo.setVisibility(View.GONE);
-                                for(int i=0; i < jsonArray.length(); i++){
-                                    JSONObject jsonObject = jsonArray.getJSONObject(i);
-                                    dataList.add(0, new DataProgram(
-                                            jsonObject.getString("img"),
-                                            jsonObject.getString("broad"),
-                                            jsonObject.getString("title"),
-                                            jsonObject.getString("time"),
-                                            jsonObject.getInt("total"),
-                                            jsonObject.getString("intro"),
-                                            jsonObject.getString("rating")
-                                    ));
+                    if(response.body() != null){
+                        String result = response.body().string();
+                        if (!result.equals("fail")) {
+                            try {
+                                JSONArray jsonArray = new JSONArray(result);
+                                if(jsonArray.length() == 0){
+                                    chatRoomInfo.setVisibility(View.VISIBLE);
+                                } else {
+                                    chatRoomInfo.setVisibility(View.GONE);
+                                    for(int i=0; i < jsonArray.length(); i++){
+                                        JSONObject jsonObject = jsonArray.getJSONObject(i);
+                                        dataList.add(0, new DataProgram(
+                                                jsonObject.getString("img"),
+                                                jsonObject.getString("broad"),
+                                                jsonObject.getString("title"),
+                                                jsonObject.getString("time"),
+                                                jsonObject.getInt("total"),
+                                                jsonObject.getString("intro"),
+                                                jsonObject.getString("rating")
+                                        ));
+                                    }
+                                    adapter.notifyDataSetChanged();
                                 }
-                                adapter.notifyDataSetChanged();
+                            } catch (JSONException e) {
+                                e.printStackTrace();
                             }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
                         }
                     }
                 } catch (IOException e) {
@@ -463,7 +501,6 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
             @Override
             protected void onPostExecute(Object o) {
                 super.onPostExecute(o);
-                update_complete++;
                 for (int j = 0 ; j < programTitle.size(); j++){
                     onCreateProgramRoom(week,
                             imgUrl.get(j),
@@ -491,12 +528,31 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
     }
 
     @Override
-    public void chatItemBoxClicked(int i) {
+    public void chatItemBoxClicked(final int i) {
 
-        Intent intent = new Intent(this, ChatActivity.class);
-        intent.putExtra("program",dataList.get(i).getProgramTitle());
-        startActivity(intent);
+        roomList = lp.getString("room_list","");
+        Log.e("챗클릭룸네임리스트",roomList);
 
+        if(roomList.contains(dataList.get(i).getProgramTitle())){
+
+            Intent intent = new Intent(getApplicationContext(), ChatActivity.class);
+            intent.putExtra("program",dataList.get(i).getProgramTitle());
+            intent.putExtra("week",clickToday);
+            startActivity(intent);
+
+        } else {
+
+            Intent intent = new Intent(getApplicationContext(), EntranceActivity.class);
+            intent.putExtra("program",dataList.get(i).getProgramTitle());
+            intent.putExtra("img",dataList.get(i).getImgUrl());
+            intent.putExtra("broad",dataList.get(i).getBroadcastStation());
+            intent.putExtra("time",dataList.get(i).getProgramTime());
+            intent.putExtra("intro",dataList.get(i).getProgramIntro());
+            intent.putExtra("rating",dataList.get(i).getProgramRating());
+            intent.putExtra("week",clickToday);
+            startActivity(intent);
+
+        }
     }
 
     //----------------------------------------------------------------------------------------------
@@ -529,9 +585,23 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
     protected void onRestart() {
         super.onRestart();
 
+        roomList = lp.getString("room_list","");
+        LocalBroadcastManager.getInstance(this).registerReceiver(mBroadcastReceiver,
+                new IntentFilter("blackJinData"));
         onLoadProgramRoom(clickToday);
-        onService();
 
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mBroadcastReceiver);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mBroadcastReceiver);
     }
 
     //----------------------------------------------------------------------------------------------
@@ -546,7 +616,7 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
 
         // AlertDialog 셋팅
         alertDialogBuilder
-                .setMessage("로그아웃하면 되겠습니가? (알림 초기화)")
+                .setMessage("로그아웃하면 되겠습니까?")
                 .setCancelable(false)
                 .setPositiveButton("네",
                         new DialogInterface.OnClickListener() {
@@ -589,30 +659,16 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
 
     private void onService(){
 
-        room_list = lp.getString("room_list","");
-
-        Intent i = new Intent(getApplicationContext(),MyChatService.class);
-
-        if(!isMyServiceRunning(MyChatService.class)){
-            Log.e("MyChatService","NOT RUNNING");
-            if(!room_list.equals("")){
-                Log.e("MyChatService","Start!!!");
-                i.putExtra("RECEIVER",resultReceiver);
+        if(lp.getBoolean("login_key",false)){
+            Intent i = new Intent(getApplicationContext(),MyChatService.class);
+            if(!isMyServiceRunning(MyChatService.class)){
+                Log.e("스타트중아님,서비스시작","ㅋㅋ");
                 startService(i);
-            }
-        } else {
-            Log.e("MyChatService","RUNNING");
-            if(room_list.equals("")){
-                Log.e("MyChatService","Stop!!!");
-                stopService(i);
             } else {
-                stopService(i);
-                Log.e("MyChatService","First ReStart!!!");
-
-                i.putExtra("RECEIVER",resultReceiver);
-                startService(i);
+                Log.e("스타트중이라,서비스시작안함","ㅋㅋ");
             }
         }
+
     }
 
     //----------------------------------------------------------------------------------------------
@@ -686,5 +742,33 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
     }
 
     //----------------------------------------------------------------------------------------------
+
+    private void onLoadRoomList() {
+
+        Call<ResponseBody> get_room_by_user = apiService.getRoomByUser(nick);
+        get_room_by_user.enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                try {
+
+//                    Log.e("넣는값",response.body().string());
+                    String str3 = response.body().string();
+
+                    lEdit.putString("room_list",str3);
+                    lEdit.apply();
+
+                    String str2 = lp.getString("room_list","메롱");
+                    Log.e("결과값",str2);
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+            }
+        });
+    }
 
 }

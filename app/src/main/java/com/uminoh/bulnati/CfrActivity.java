@@ -1,6 +1,7 @@
 package com.uminoh.bulnati;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -9,6 +10,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.media.ExifInterface;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
@@ -20,17 +22,25 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.muddzdev.styleabletoast.StyleableToast;
 import com.uminoh.bulnati.CfrUtil.Faces;
 import com.uminoh.bulnati.CfrUtil.NaverRepo;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
 import java.io.File;
 import java.io.IOException;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -57,13 +67,17 @@ public class CfrActivity extends AppCompatActivity {
 
     ImageView cfrView;
     Button cameraButton;
+    Button cameraButton2;
     Button galleryButton;
-    Button cfrButton;
     ProgressBar cfrProgressBar;
     TextView firstCfr;
-    TextView secondCfr;
-    TextView thirdCfr;
-    TextView backCfr;
+    ImageButton backCfr;
+    ImageView cfrResultView;
+
+    //크롤링
+    Document doc = null;
+    String imgStr = null;
+    String jobsStr = "";
 
     //권한 선언
     private String[] permissions = {Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE}; //권한 설정 변수
@@ -86,14 +100,13 @@ public class CfrActivity extends AppCompatActivity {
 
         //구성요소 연결
         cfrView = findViewById(R.id.cfrView);
-        cameraButton = findViewById(R.id.camera_button);
+        cameraButton = findViewById(R.id.camera_front_button);
+        cameraButton2 = findViewById(R.id.camera_back_button);
         galleryButton = findViewById(R.id.gallery_button);
-        cfrButton = findViewById(R.id.cfr_button);
         firstCfr = findViewById(R.id.first_cfr);
-        secondCfr = findViewById(R.id.second_cfr);
-        thirdCfr = findViewById(R.id.third_cfr);
         cfrProgressBar = findViewById(R.id.cfr_progressBar);
         backCfr = findViewById(R.id.back_cfr);
+        cfrResultView = findViewById(R.id.cfr_result_view);
 
         backCfr.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -107,7 +120,14 @@ public class CfrActivity extends AppCompatActivity {
         cameraButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                selectPhoto();
+                selectPhoto(true);
+            }
+        });
+
+        cameraButton2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                selectPhoto(false);
             }
         });
 
@@ -115,56 +135,6 @@ public class CfrActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 selectGallery();
-            }
-        });
-
-        cfrButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(mFile != null){
-                    cfrProgressBar.setVisibility(View.VISIBLE);
-                    RequestBody reBody = RequestBody.create(MediaType.parse("image/jpeg"), mFile);
-                    MultipartBody.Part body = MultipartBody.Part.createFormData("image",mFile.getName(), reBody);
-                    Call<NaverRepo> call = apiService.naverRepo(SecretKey.clientId, SecretKey.clientSecret, body);
-                    call.enqueue(new Callback<NaverRepo>() {
-                        @Override
-                        public void onResponse(Call<NaverRepo> call, Response<NaverRepo> response) {
-                            if (response.isSuccessful()) {
-                                Faces[] str = response.body().getFaces();
-                                String celebrity = str[0].getCelebrity().getValue();
-                                String percent = Math.round(str[0].getCelebrity().getConfidence()*100)+"%";
-                                firstCfr.setText("1. "+ celebrity +" ("+percent+")");
-                                if(str.length == 1){
-                                    secondCfr.setText("");
-                                    thirdCfr.setText("");
-                                } else if (str.length == 2) {
-                                    String celebrity1 = str[1].getCelebrity().getValue();
-                                    String percent1 = Math.round(str[1].getCelebrity().getConfidence()*100)+"%";
-                                    secondCfr.setText("2. "+ celebrity1 +" ("+percent1+")");
-                                    thirdCfr.setText("");
-                                } else {
-                                    String celebrity1 = str[1].getCelebrity().getValue();
-                                    String percent1 = Math.round(str[1].getCelebrity().getConfidence()*100)+"%";
-                                    secondCfr.setText("2. "+ celebrity1 +" ("+percent1+")");
-                                    String celebrity2 = str[2].getCelebrity().getValue();
-                                    String percent2 = Math.round(str[2].getCelebrity().getConfidence()*100)+"%";
-                                    thirdCfr.setText("3. "+ celebrity2 +" ("+percent2+")");
-                                }
-                            } else {
-                                firstCfr.setText("일치하는 연예인을 찾지 못했습니다!");
-                                secondCfr.setText("");
-                                thirdCfr.setText("");
-                            }
-                            cfrProgressBar.setVisibility(View.GONE);
-                        }
-                        @Override
-                        public void onFailure(Call<NaverRepo> call, Throwable t) {
-
-                        }
-                    });
-                } else {
-                    StyleableToast.makeText(CfrActivity.this, "이미지를 선택해주세요!", Toast.LENGTH_SHORT, R.style.mytoast).show();
-                }
             }
         });
 
@@ -181,14 +151,15 @@ public class CfrActivity extends AppCompatActivity {
             switch (requestCode) {
                 case GALLERY_CODE:
                     sendPicture(data.getData()); //갤러리에서 가져오기
+                    cfrProgressBar.setVisibility(View.VISIBLE);
+                    onCfr();
                     break;
                 case CAMERA_CODE:
                     Uri uri = data.getData();
                     cfrView.setImageURI(uri);//이미지 뷰에 비트맵 넣기
-
                     mFile = new File(uri.getPath());
-                    Log.e("카메라 실제경로", uri.getPath());
-//                    getPictureForPhoto(); //카메라에서 가져오기
+                    cfrProgressBar.setVisibility(View.VISIBLE);
+                    onCfr();
                     break;
                 default:
                     break;
@@ -206,11 +177,11 @@ public class CfrActivity extends AppCompatActivity {
         startActivityForResult(intent, GALLERY_CODE);
     }
 
-    private void selectPhoto() {
-
+    private void selectPhoto(boolean b) {
+        StyleableToast.makeText(this, "가로모드로 실행됩니다!", Toast.LENGTH_SHORT, R.style.mytoast).show();
         Intent intent = new Intent(getApplicationContext(), CameraActivity.class);
+        intent.putExtra("front",b);
         startActivityForResult(intent, CAMERA_CODE);
-
     }
 
     //----------------------------------------------------------------------------------------------
@@ -268,6 +239,93 @@ public class CfrActivity extends AppCompatActivity {
             column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
         }
         return cursor.getString(column_index);
+    }
+
+    private void onCfr(){
+        if(mFile != null){
+            RequestBody reBody = RequestBody.create(MediaType.parse("image/jpeg"), mFile);
+            MultipartBody.Part body = MultipartBody.Part.createFormData("image",mFile.getName(), reBody);
+            Call<NaverRepo> call = apiService.naverRepo(SecretKey.clientId, SecretKey.clientSecret, body);
+            call.enqueue(new Callback<NaverRepo>() {
+                @Override
+                public void onResponse(Call<NaverRepo> call, Response<NaverRepo> response) {
+                    if (response.isSuccessful()) {
+                        Faces[] str = response.body().getFaces();
+                        String celebrity = str[0].getCelebrity().getValue();
+                        String percent = Math.round(str[0].getCelebrity().getConfidence()*100)+"%";
+                        onSearchWho(celebrity, percent, cfrResultView);
+                    } else {
+                        firstCfr.setText("일치하는 연예인을 찾지 못했습니다!");
+                        cfrProgressBar.setVisibility(View.GONE);
+                        Glide.with(getApplicationContext())
+                                .load(R.drawable.celebrity)
+                                .into(cfrResultView);
+                    }
+                }
+                @Override
+                public void onFailure(Call<NaverRepo> call, Throwable t) {
+
+                }
+            });
+        } else {
+            StyleableToast.makeText(CfrActivity.this, "이미지를 선택해주세요!", Toast.LENGTH_SHORT, R.style.mytoast).show();
+        }
+    }
+
+    //----------------------------------------------------------------------------------------------
+
+    private void onSearchWho(final String who, final String percent, final ImageView imgView){
+
+        //AsyncTask 객체 생성
+        @SuppressLint("StaticFieldLeak")
+        AsyncTask asyncTask = new AsyncTask() {
+            @Override
+            protected Object doInBackground(Object[] params) {
+
+                String baseUrl = "https://search.naver.com/search.naver?query=";
+                try {
+                    String subUrl = URLEncoder.encode(who,"UTF-8");
+                    doc = Jsoup.connect(baseUrl+subUrl).get();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                //image
+
+                try{
+                    Elements images = doc.select("div.profile_wrap").select("img");
+                    imgStr = images.get(0).attr("src");
+
+                    //jobs
+                    Elements jobs = doc.select("div.profile_wrap").select("span");
+                    jobsStr = jobs.get(0).text();
+                } catch (IndexOutOfBoundsException e){
+                    e.printStackTrace();
+                }
+
+                return null;
+            }
+            @SuppressLint("SetTextI18n")
+            @Override
+            protected void onPostExecute(Object o) {
+                super.onPostExecute(o);
+                if(imgStr != null){
+                    Glide.with(getApplicationContext())
+                            .load(imgStr)
+                            .into(imgView);
+                    firstCfr.setText(jobsStr+"\n("+percent+")");
+                } else {
+                    Glide.with(getApplicationContext())
+                            .load(R.drawable.celebrity)
+                            .into(imgView);
+                    firstCfr.setText("일치하는 연예인을 찾지 못했습니다!");
+                }
+                cfrProgressBar.setVisibility(View.GONE);
+            }
+        };
+
+        asyncTask.execute();
+
     }
 
 

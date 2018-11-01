@@ -18,6 +18,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.ResultReceiver;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -34,16 +35,14 @@ public class MyChatService extends Service implements ReceiverThread.OnReceiveLi
     private Socket mSocket = null;
     Thread tr;
     ReceiverThread thread2;
-    SenderThread mThread1;
-    private Handler mHandler;
     Intent i;
 
     //쉐어드프리퍼런스 : 로그인 유지 및 로드
     SharedPreferences lp;
     SharedPreferences.Editor lEdit;
     String room_list; //룸네임리스트
-    String login_id = "";
     String login_nick = "";
+    String notiOn;
 
     //----------------------------------------------------------------------------------------------
     //온바인드
@@ -64,26 +63,30 @@ public class MyChatService extends Service implements ReceiverThread.OnReceiveLi
     public void onCreate() {
         super.onCreate();
 
-        mHandler = new Handler();
-
         //쉐어드프리퍼런스 연결
         lp = getSharedPreferences("login", MODE_PRIVATE);
         lEdit = lp.edit();
-        login_id = lp.getString("login_nick","");
+        login_nick = lp.getString("login_nick","");
         room_list = lp.getString("room_list","");
+
+    }
+
+    //----------------------------------------------------------------------------------------------
+    //온스타트커맨드 : 서비스가 호출될 때마다 실행
+
+    @Override
+    public int onStartCommand(final Intent intent, int flags, int startId) {
+
+        i=intent;
 
         //소켓생성
         new Thread(new Runnable() {
             @Override
             public void run() {
                 try {
+
                     mSocket = new Socket(SecretKey.ip, SecretKey.port);
-
-                    // 두번째 파라메터 로는 본인의 닉네임을 적어줍니다.
-                    mThread1 = new SenderThread(mSocket,login_nick);
-                    mThread1.start();
-
-                    thread2 = new ReceiverThread(mSocket);
+                    thread2 = new ReceiverThread(mSocket, login_nick+">리시버");
                     thread2.setOnReceiveListener(MyChatService.this);
                     thread2.start();
 
@@ -93,14 +96,6 @@ public class MyChatService extends Service implements ReceiverThread.OnReceiveLi
             }
         }).start();
 
-    }
-
-    //----------------------------------------------------------------------------------------------
-    //온스타트커맨드 : 서비스가 호출될 때마다 실행
-
-    @Override
-    public int onStartCommand(final Intent intent, int flags, int startId) {
-        i=intent;
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -112,10 +107,6 @@ public class MyChatService extends Service implements ReceiverThread.OnReceiveLi
         super.onDestroy();
         if (thread2 != null) {
             thread2.interrupt();
-        }
-
-        if (mThread1 != null) {
-            mThread1.close();
         }
     }
 
@@ -137,37 +128,28 @@ public class MyChatService extends Service implements ReceiverThread.OnReceiveLi
         String msg = split[1].replace("%n", "\n");
         String room = split[2];
 
-        room_list = lp.getString("room_list","");
-//        Log.e("룸네임리스트", room_list);
+        Log.e("챗온리시브",message);
 
-        //내가 입장해있는 방에만 저장과 알림을 받는다 : * 개선 필요
+        //필터링 하지 않아도 됨, if(room_list.contains(room))
 
-        if(room_list.contains(room)) {
-            if (isAppIsInBackground(getApplicationContext())) {
-                Log.e("앱 백그라운드 상태 ", "ㅇㅋ");
+        if (isAppIsInBackground(getApplicationContext())) {
+
+            notiOn = lp.getString("noti_on","  - 메시지 알람 Off");
+            Log.e("앱 백그라운드 상태 ", "ㅇㅋ");
+            if(notiOn.equals("  - 메시지 알람 On")){
                 onNotification(msg, nickname, room);
-            } else {
-//                Log.e("앱 포그라운드 상태", "ㅇㅋ");
-                Log.e("메시지 : "+msg,listener);
-                mHandler.post(new ToastRunnable("<" + room + "> 방에서\n새로운 메시지가 왔습니다!"));
             }
-        }
 
-        //서비스 센더 : 액티비티 메시지 전달
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                Bundle bundle = new Bundle();
-                ResultReceiver receiver = i.getParcelableExtra("RECEIVER");
-                bundle.putString("msg","Succeed!!");
-                receiver.send(1,bundle);
-            }
-        }).start();
+        } else {
+
+            Log.e("닉:"+nickname+"/메:"+msg+"/룸:"+room, "서비스");
+            Intent intent = new Intent("blackJinData");
+            intent.putExtra("nick", nickname);
+            intent.putExtra("msg", msg);
+            intent.putExtra("room", room);
+            LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+
+        }
 
     }
 

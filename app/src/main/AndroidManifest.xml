@@ -72,10 +72,11 @@
         <activity android:name=".NotiActivity" />
         <activity android:name=".SearchActivity" />
         <activity android:name=".CfrActivity" />
-        <activity android:name=".CameraActivity"
-            android:screenOrientation="landscape"
-            android:configChanges="keyboardHidden|orientation">
-        </activity>
+        <activity android:name=".NickActivity" />
+        <activity
+            android:name=".CameraActivity"
+            android:configChanges="keyboardHidden|orientation"
+            android:screenOrientation="landscape"></activity>
 
         <!-- 파이어베이스 서비스 태그 추가 -->
         <service android:name=".FcmService.MyFirebaseMessagingService">
@@ -93,7 +94,7 @@
             android:enabled="true"
             android:exported="true" />
 
-
+        <activity android:name=".EntranceActivity"></activity>
     </application>
 
 </manifest>

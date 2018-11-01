@@ -15,42 +15,63 @@ import retrofit2.http.Part;
 public interface ApiService {
 
     //서버주소
-    String API_URL = "http://"+ ConstantsTcp.ip;
+    String API_URL = "http://"+ SecretKey.ip;
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //로그인 및 회원가입
 
     @FormUrlEncoded
-    @POST("id_check.php")
+    @POST("page_login/id_check.php")
     Call<ResponseBody> id_check(@Field("id") String id);
 
     @FormUrlEncoded
-    @POST("nick_check.php")
+    @POST("page_login/nick_check.php")
     Call<ResponseBody> nick_check(@Field("nick") String nick);
 
     @FormUrlEncoded
-    @POST("join.php")
+    @POST("page_login/join.php")
     Call<ResponseBody> join(@Field("id") String Id,
                             @Field("pw") String pw,
                             @Field("nick") String nick,
                             @Field("pn") String pn);
 
     @FormUrlEncoded
-    @POST("login.php")
+    @POST("page_login/login.php")
     Call<ResponseBody> login(@Field("id") String Id,
                              @Field("pw") String pw);
 
     @FormUrlEncoded
-    @POST("save_chat.php")
+    @POST("page_login/save_nick.php")
+    Call<ResponseBody> saveNick(@Field("nick_new") String nick_new,
+                                @Field("nick") String nick);
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //채팅
+
+    @FormUrlEncoded
+    @POST("page_chat/save_chat.php")
     Call<ResponseBody> saveChat(@Field("msg") String msg,
                                       @Field("nick") String nick,
                                       @Field("date") String date,
                                       @Field("room") String room);
 
     @FormUrlEncoded
-    @POST("load_chat.php")
-    Call<ResponseBody> loadChat(@Field("room") String room);
-
+    @POST("page_chat/load_chat.php")
+    Call<ResponseBody> loadChat(@Field("room") String room,
+                                @Field("nick") String nick);
 
     @FormUrlEncoded
-    @POST("create_program_room.php")
+    @POST("page_chat/exit_chat.php")
+    Call<ResponseBody> exitChat(@Field("room") String room,
+                                @Field("nick") String nick,
+                                @Field("date") String date);
+
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //예능채팅방
+
+    @FormUrlEncoded
+    @POST("page_program/create_program_room.php")
     Call<ResponseBody> createProgramRoom(@Field("week") String week,
                                          @Field("img") String img,
                                          @Field("broad") String broad,
@@ -60,27 +81,32 @@ public interface ApiService {
                                          @Field("rating") String rating);
 
     @FormUrlEncoded
-    @POST("load_program_room.php")
+    @POST("page_program/load_program_room.php")
     Call<ResponseBody> loadProgramRoom(@Field("week") String week);
 
     @FormUrlEncoded
-    @POST("search_program_room.php")
+    @POST("page_program/search_program_room.php")
     Call<ResponseBody> searchProgramRoom(@Field("text") String text);
 
     @FormUrlEncoded
-    @POST("broad_program_room.php")
+    @POST("page_program/broad_program_room.php")
     Call<ResponseBody> broadProgramRoom(@Field("text") String text);
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    //영상통화
+
     @FormUrlEncoded
-    @POST("video_list_up.php")
+    @POST("page_video/video_list_up.php")
     Call<ResponseBody> videoListUp(@Field("room") String room);
 
     @FormUrlEncoded
-    @POST("video_list_down.php")
+    @POST("page_video/video_list_down.php")
     Call<ResponseBody> videoListDown(@Field("room") String room);
 
-    @POST("video_list_show.php")
+    @POST("page_video/video_list_show.php")
     Call<ResponseBody> videoListShow();
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Multipart
     @POST("/v1/vision/celebrity")
@@ -88,10 +114,19 @@ public interface ApiService {
             , @Header("X-Naver-Client-Secret") String secret
             , @Part MultipartBody.Part file);
 
-    @Multipart
-    @POST("/v1/vision/face")
-    Call<NaverRepo> naverRepo2(@Header("X-Naver-Client-Id") String id
-            ,@Header("X-Naver-Client-Secret") String secret
-            ,@Part MultipartBody.Part file);
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    @FormUrlEncoded
+    @POST("page_ent/set_room_user.php")
+    Call<ResponseBody> setRoomUser(@Field("room") String room,
+                                   @Field("nick") String nick);
+
+    @FormUrlEncoded
+    @POST("page_ent/get_room_by_user.php")
+    Call<ResponseBody> getRoomByUser(@Field("nick") String nick);
+
+    @FormUrlEncoded
+    @POST("page_ent/get_user_by_room.php")
+    Call<ResponseBody> getUserByRoom(@Field("room") String room);
 
 }

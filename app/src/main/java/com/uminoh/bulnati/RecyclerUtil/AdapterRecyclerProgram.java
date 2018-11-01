@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +23,7 @@ public class AdapterRecyclerProgram extends RecyclerView.Adapter<AdapterRecycler
     //받아올 데이터리스트
     private List<DataProgram> mProgramList;
     private Context context;
+    private String room_list;
 
     //쉐어드프리퍼런스 : 로그인 유지 및 로드
     private SharedPreferences lp;
@@ -33,9 +35,12 @@ public class AdapterRecyclerProgram extends RecyclerView.Adapter<AdapterRecycler
     public AdapterRecyclerProgram(Context context, List<DataProgram> mDataList) { //어레이리스트 셋온 (생성자)
         mProgramList = mDataList;
         this.context = context;
+
         //쉐어드프리퍼런스 연결
         lp = context.getSharedPreferences("login", Context.MODE_PRIVATE);
         lEdit = lp.edit();
+        room_list = lp.getString("room_list","");
+
     }
 
     //----------------------------------------------------------------------------------------------
@@ -65,6 +70,7 @@ public class AdapterRecyclerProgram extends RecyclerView.Adapter<AdapterRecycler
         TextView programRating;
         TextView programIntro;
         TextView joinMsg;
+        TextView totalText;
 
 
         //뷰홀더와 뷰 연결
@@ -78,6 +84,7 @@ public class AdapterRecyclerProgram extends RecyclerView.Adapter<AdapterRecycler
             programRating = itemView.findViewById(R.id.program_rating);
             programIntro = itemView.findViewById(R.id.program_intro);
             joinMsg = itemView.findViewById(R.id.join_msg);
+            totalText = itemView.findViewById(R.id.total_text);
         }
     }
 
@@ -101,19 +108,17 @@ public class AdapterRecyclerProgram extends RecyclerView.Adapter<AdapterRecycler
     @Override
     public void onBindViewHolder(@NonNull final ViewHolder viewHolder, @SuppressLint("RecyclerView") final int i) {
 
+        room_list = lp.getString("room_list","");
         Glide.with(context).load(mProgramList.get(i).getImgUrl()).into(viewHolder.programImage);
         viewHolder.programBroad.setText(mProgramList.get(i).getBroadcastStation());
         viewHolder.programTitle.setText(mProgramList.get(i).getProgramTitle());
         viewHolder.programTime.setText(mProgramList.get(i).getProgramTime());
-        int total_msg = mProgramList.get(i).getTotal();
-        if(total_msg != -1 ){
-            @SuppressLint("DefaultLocale") String str = String.format("%,d", total_msg);
-            viewHolder.joinMsg.setText("전체채팅수 : "+str);
-        } else {
-            viewHolder.joinMsg.setText("");
-        }
+        viewHolder.totalText.setText(mProgramList.get(i).getTotal()+"명");
         viewHolder.programRating.setText(mProgramList.get(i).getProgramRating());
         viewHolder.programIntro.setText(mProgramList.get(i).getProgramIntro());
+        if(room_list.contains(mProgramList.get(i).getProgramTitle())){
+            viewHolder.programTitle.setText(mProgramList.get(i).getProgramTitle() + " ★");
+        }
 
         //인터페이스 체크
         if (mListener != null) {

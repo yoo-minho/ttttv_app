@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
+import android.widget.ImageButton;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -33,7 +34,6 @@ public class AdapterRecyclerNoti extends RecyclerView.Adapter<AdapterRecyclerNot
     //인터페이스(메쏘드를 공유하는 간이 클래스 = 도구)
     public interface AdapterRecyclerNotiClickListener { //메쏘드 선언
         void ItemBoxClicked(int i);
-        void SwitchClicked(int i, boolean b);
     }
 
     private AdapterRecyclerNoti.AdapterRecyclerNotiClickListener mListener; //인터페이스 객체 선언
@@ -47,18 +47,16 @@ public class AdapterRecyclerNoti extends RecyclerView.Adapter<AdapterRecyclerNot
     //뷰홀더(=틀, 리사이클러뷰 틀에 쓰일 아이템 선언)
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
+        ImageButton notiFirstImg;
+        ImageButton notiSecondImg;
         TextView notiTitle;
-        TextView notiBroad;
-        TextView notiWeek;
-        Switch notiSwitch;
 
         //뷰홀더와 뷰 연결
         ViewHolder(@NonNull View itemView) {
             super(itemView);
+            notiFirstImg = itemView.findViewById(R.id.noti_first_img);
+            notiSecondImg = itemView.findViewById(R.id.noti_second_img);
             notiTitle = itemView.findViewById(R.id.noti_title);
-            notiBroad = itemView.findViewById(R.id.noti_broad);
-            notiWeek = itemView.findViewById(R.id.noti_week);
-            notiSwitch = itemView.findViewById(R.id.noti_switch);
         }
     }
 
@@ -81,9 +79,6 @@ public class AdapterRecyclerNoti extends RecyclerView.Adapter<AdapterRecyclerNot
     public void onBindViewHolder(@NonNull ViewHolder viewHolder, final int i) {
 
         viewHolder.notiTitle.setText(mItemList.get(i).getTitle());
-        viewHolder.notiBroad.setText(mItemList.get(i).getBroad());
-        viewHolder.notiWeek.setText(mItemList.get(i).getWeek());
-        viewHolder.notiSwitch.setChecked(mItemList.get(i).getCheck());
 
         if (mListener != null) {
             viewHolder.notiTitle.setOnClickListener(new View.OnClickListener() {
@@ -92,10 +87,16 @@ public class AdapterRecyclerNoti extends RecyclerView.Adapter<AdapterRecyclerNot
                     mListener.ItemBoxClicked(i);
                 }
             });
-            viewHolder.notiSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            viewHolder.notiFirstImg.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                    mListener.SwitchClicked(i, b);
+                public void onClick(View v) {
+                    mListener.ItemBoxClicked(i);
+                }
+            });
+            viewHolder.notiSecondImg.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mListener.ItemBoxClicked(i);
                 }
             });
 

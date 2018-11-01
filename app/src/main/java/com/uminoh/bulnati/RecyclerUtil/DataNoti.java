@@ -5,13 +5,11 @@ public class DataNoti {
     public String title;
     public String broad;
     public String week;
-    public boolean check;
 
-    public DataNoti(String title, String broad, String week, boolean check) {
+    public DataNoti(String title, String broad, String week) {
         this.title = title;
         this.broad = broad;
         this.week = week;
-        this.check = check;
     }
 
     public String getTitle() {
@@ -36,11 +34,4 @@ public class DataNoti {
         this.week = week;
     }
 
-    public boolean getCheck() {
-        return check;
-    }
-
-    public void setCheck(boolean check) {
-        this.check = check;
-    }
 }

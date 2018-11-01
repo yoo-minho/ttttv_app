@@ -1,5 +1,7 @@
 package com.uminoh.bulnati.TcpUtil;
 
+import android.util.Log;
+
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
@@ -25,10 +27,13 @@ public class SenderThread extends Thread {
 
     public void sendMessage(final String message, final String room) {
 
+        Log.e("센드 메시지", message+"/"+room);
+
         new Thread(new Runnable() {
             @Override
             public void run() {
                     mWriter.println(message.replace("\n", "%n")+">"+room);
+                    //룸 아닌 닉 리스트
                     mWriter.flush();
             }
         }).start();
@@ -38,7 +43,7 @@ public class SenderThread extends Thread {
     public void run() {
 
         try {
-//            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+
             mWriter = new PrintWriter(socket.getOutputStream());
 
             // 제일 먼저 서버로 대화명을 송신합니다.

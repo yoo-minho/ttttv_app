@@ -53,6 +53,9 @@ public class CameraActivity extends AppCompatActivity implements CameraBridgeVie
     public long cascadeClassifier_face = 0;
     public long cascadeClassifier_eye = 0;
 
+    int ret = 0;
+    boolean isFrontCam = true;
+
     static {
         System.loadLibrary("opencv_java3");
         System.loadLibrary("native-lib");
@@ -100,6 +103,9 @@ public class CameraActivity extends AppCompatActivity implements CameraBridgeVie
         cascadeClassifier_eye = loadCascade( "haarcascade_eye_tree_eyeglasses.xml");
     }
 
+    Button disconnectButton;
+    Button captureButton;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,15 +129,24 @@ public class CameraActivity extends AppCompatActivity implements CameraBridgeVie
         }
         else  read_cascade_file(); //추가
 
-        mOpenCvCameraView = findViewById(R.id.surface_view);
-        mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
-        mOpenCvCameraView.setCvCameraViewListener(this);
-        mOpenCvCameraView.setCameraIndex(1); // front-camera(1),  back-camera(0)
-        mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+        disconnectButton = findViewById(R.id.disconnect_button);
+        captureButton = findViewById(R.id.capture_button);
 
-        Button button = findViewById(R.id.button);
-        button.setOnClickListener(new View.OnClickListener() {
+        disconnectButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onBackPressed();
+            }
+        });
+
+        captureButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+
+                if( ret == 0 ){
+                    Toast.makeText(CameraActivity.this, "검출할 얼굴 대상이 없습니다!", Toast.LENGTH_SHORT).show();
+                } else if ( ret >= 2){
+                    Toast.makeText(CameraActivity.this, "검출할 얼굴 대상이 너무 많습니다!", Toast.LENGTH_SHORT).show();
+                } else {
                     File path = new File(Environment.getExternalStorageDirectory() + "/cfr/");
                     if (!path.exists()) {
                         path.mkdirs();
@@ -151,8 +166,24 @@ public class CameraActivity extends AppCompatActivity implements CameraBridgeVie
                     i.setData(Uri.fromFile(file));
                     setResult(RESULT_OK,i);
                     finish();
+                }
             }
         });
+
+        mOpenCvCameraView = findViewById(R.id.surface_view);
+        mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
+        mOpenCvCameraView.setCvCameraViewListener(this);
+
+        if(getIntent()!=null){
+            isFrontCam = getIntent().getBooleanExtra("front",true);
+        }
+
+        if(isFrontCam){
+            mOpenCvCameraView.setCameraIndex(1);
+        } else {
+            mOpenCvCameraView.setCameraIndex(0);
+        }
+        mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
 
     }
 
@@ -189,16 +220,18 @@ public class CameraActivity extends AppCompatActivity implements CameraBridgeVie
 //            getWriteLock();
 
             matInput = inputFrame.rgba();
+
+
             if ( matResult != null ) matResult.release();
+
             matResult = new Mat(matInput.rows(), matInput.cols(), matInput.type());
-            Core.flip(matInput, matInput, 1);
 
-            int ret = detect(cascadeClassifier_face,cascadeClassifier_eye, matInput.getNativeObjAddr(),
-                    matResult.getNativeObjAddr());
-
-            if(ret != 0){
-                Toast.makeText(this, "얼굴이"+ret+"개", Toast.LENGTH_SHORT).show();
+            if(isFrontCam){
+                Core.flip(matInput,matInput,1);
             }
+
+            ret = detect(cascadeClassifier_face,cascadeClassifier_eye, matInput.getNativeObjAddr(),
+                    matResult.getNativeObjAddr());
 
 //        } catch (InterruptedException e) {
 //            e.printStackTrace();

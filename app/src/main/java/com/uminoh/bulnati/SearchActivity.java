@@ -157,7 +157,7 @@ public class SearchActivity extends AppCompatActivity implements AdapterRecycler
                                             jsonObject.getString("broad"),
                                             "["+jsonObject.getString("week")+"] "+jsonObject.getString("title"),
                                             jsonObject.getString("time"),
-                                            -1,
+                                            jsonObject.getInt("total"),
                                             jsonObject.getString("intro"),
                                             jsonObject.getString("rating")
                                     ));
@@ -200,7 +200,7 @@ public class SearchActivity extends AppCompatActivity implements AdapterRecycler
                                             jsonObject.getString("broad"),
                                             "["+jsonObject.getString("week")+"] "+jsonObject.getString("title"),
                                             jsonObject.getString("time"),
-                                            -1,
+                                            jsonObject.getInt("total"),
                                             jsonObject.getString("intro"),
                                             jsonObject.getString("rating")
                                     ));
