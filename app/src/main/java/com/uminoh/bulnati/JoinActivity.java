@@ -204,11 +204,8 @@ public class JoinActivity extends AppCompatActivity {
                 String idc = idc_button.getText().toString();
                 String nc = nick_button.getText().toString();
 
-                if (id.equals("") || pw.equals("") || nick.equals("") || pn.equals("")) {
+                if (id.equals("") || pw.equals("") || nick.equals("")) {
                     Toast.makeText(JoinActivity.this, "빈칸을 확인해주세요!", Toast.LENGTH_SHORT).show();
-                } else if (pn.length() != 11) {
-                    Toast.makeText(JoinActivity.this, "핸드폰 번호를 제대로 적어주세요", Toast.LENGTH_SHORT).show();
-                    pn_edit.setText("");
                 } else if (!idc.equals("확인완료") || !nc.equals("확인완료")) {
                     Toast.makeText(JoinActivity.this, "아이디와 닉네임을 확인해주세요", Toast.LENGTH_SHORT).show();
                 } else {
@@ -224,8 +221,9 @@ public class JoinActivity extends AppCompatActivity {
                                 e.printStackTrace();
                             }
                             Toast.makeText(JoinActivity.this, "회원가입 성공", Toast.LENGTH_SHORT).show();
-                            Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
-                            startActivity(intent);
+                            Intent i = new Intent();
+                            i.putExtra("id",id);
+                            setResult(RESULT_OK, i);
                             finish();
                         }
 

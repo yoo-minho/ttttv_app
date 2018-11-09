@@ -249,22 +249,43 @@ public class CfrActivity extends AppCompatActivity {
             call.enqueue(new Callback<NaverRepo>() {
                 @Override
                 public void onResponse(Call<NaverRepo> call, Response<NaverRepo> response) {
+                    Log.e("얼굴값리턴","성공");
                     if (response.isSuccessful()) {
                         Faces[] str = response.body().getFaces();
-                        String celebrity = str[0].getCelebrity().getValue();
-                        String percent = Math.round(str[0].getCelebrity().getConfidence()*100)+"%";
-                        onSearchWho(celebrity, percent, cfrResultView);
+                        if(str != null){
+                            try {
+                                String celebrity = str[0].getCelebrity().getValue();
+                                String percent = Math.round(str[0].getCelebrity().getConfidence()*100)+"%";
+                                onSearchWho(celebrity, percent, cfrResultView);
+                            } catch (IndexOutOfBoundsException e){
+                                e.printStackTrace();
+                            }
+                        } else {
+                            firstCfr.setText("얼굴이 인식되지 않습니다!");
+                            Glide.with(getApplicationContext())
+                                    .load(R.drawable.celebrity)
+                                    .into(cfrResultView);
+                            cfrProgressBar.setVisibility(View.GONE);
+                        }
                     } else {
-                        firstCfr.setText("일치하는 연예인을 찾지 못했습니다!");
+                        firstCfr.setText("일치하는 연예인을 찾지 못했습니다! 이목구비 선명하게 사진을 찍어주세요!");
                         cfrProgressBar.setVisibility(View.GONE);
                         Glide.with(getApplicationContext())
                                 .load(R.drawable.celebrity)
                                 .into(cfrResultView);
+                        cfrProgressBar.setVisibility(View.GONE);
                     }
+
                 }
                 @Override
                 public void onFailure(Call<NaverRepo> call, Throwable t) {
-
+                    Log.e("얼굴값리턴","실패");
+                    cfrProgressBar.setVisibility(View.GONE);
+                    firstCfr.setText("일치하는 연예인을 찾지 못했습니다! 이목구비 선명하게 사진을 찍어주세요!");
+                    cfrProgressBar.setVisibility(View.GONE);
+                    Glide.with(getApplicationContext())
+                            .load(R.drawable.celebrity)
+                            .into(cfrResultView);
                 }
             });
         } else {
@@ -275,6 +296,9 @@ public class CfrActivity extends AppCompatActivity {
     //----------------------------------------------------------------------------------------------
 
     private void onSearchWho(final String who, final String percent, final ImageView imgView){
+
+        imgStr = null;
+        jobsStr = null;
 
         //AsyncTask 객체 생성
         @SuppressLint("StaticFieldLeak")

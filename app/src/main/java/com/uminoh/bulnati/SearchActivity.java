@@ -1,6 +1,7 @@
 package com.uminoh.bulnati;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -48,6 +49,12 @@ public class SearchActivity extends AppCompatActivity implements AdapterRecycler
     Button sbsButton;
     Button tvnButton;
 
+    String week;
+
+    //쉐어드프리퍼런스 : 로그인 유지
+    SharedPreferences lp;
+    SharedPreferences.Editor lEdit;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,11 +71,15 @@ public class SearchActivity extends AppCompatActivity implements AdapterRecycler
         sbsButton = findViewById(R.id.sbs_filter);
         tvnButton = findViewById(R.id.tvn_filter);
 
+        //쉐어드프리퍼런스 연결
+        lp = getSharedPreferences("login", MODE_PRIVATE);
+        lEdit = lp.edit();
+
         //기본요소
         dataList = new ArrayList<>();
 
         //리사이클러뷰 연결
-        adapter = new AdapterRecyclerProgram(this, dataList);
+        adapter = new AdapterRecyclerProgram(this, dataList, null);
         RecyclerView recyclerView = findViewById(R.id.search_recycler_view);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
@@ -146,20 +157,23 @@ public class SearchActivity extends AppCompatActivity implements AdapterRecycler
                 try {
                     dataList.clear();
                     String result = response.body().string();
+                    Log.e("result",result);
                     if (!result.equals("fail")) {
                         try {
                             JSONArray jsonArray = new JSONArray(result);
                             if(jsonArray.length() != 0){
                                 for(int i=0; i < jsonArray.length(); i++){
                                     JSONObject jsonObject = jsonArray.getJSONObject(i);
+                                    week = jsonObject.getString("week");
                                     dataList.add(0, new DataProgram(
                                             jsonObject.getString("img"),
                                             jsonObject.getString("broad"),
-                                            "["+jsonObject.getString("week")+"] "+jsonObject.getString("title"),
+                                            "["+ week +"] "+jsonObject.getString("title"),
                                             jsonObject.getString("time"),
                                             jsonObject.getInt("total"),
                                             jsonObject.getString("intro"),
-                                            jsonObject.getString("rating")
+                                            jsonObject.getString("rating"),
+                                            lp.getInt(jsonObject.getString("title"),0)
                                     ));
                                 }
                                 adapter.notifyDataSetChanged();
@@ -202,7 +216,8 @@ public class SearchActivity extends AppCompatActivity implements AdapterRecycler
                                             jsonObject.getString("time"),
                                             jsonObject.getInt("total"),
                                             jsonObject.getString("intro"),
-                                            jsonObject.getString("rating")
+                                            jsonObject.getString("rating"),
+                                            lp.getInt(jsonObject.getString("title"),0)
                                     ));
                                 }
                                 adapter.notifyDataSetChanged();

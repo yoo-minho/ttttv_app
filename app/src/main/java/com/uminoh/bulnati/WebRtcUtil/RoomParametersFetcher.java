@@ -65,6 +65,8 @@ public class RoomParametersFetcher {
 
   public void makeRequest() {
     Log.d(TAG, "Connecting to room: " + roomUrl);
+    SSLConnect ssl = new SSLConnect();
+    ssl.postHttps(roomUrl, 1000, 1000);
     httpConnection =
         new AsyncHttpURLConnection("POST", roomUrl, roomMessage, new AsyncHttpURLConnection.AsyncHttpEvents() {
           @Override

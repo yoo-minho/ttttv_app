@@ -67,6 +67,14 @@ public interface ApiService {
                                 @Field("date") String date);
 
 
+    @POST("page_chat/get_all_room_user.php")
+    Call<ResponseBody> getAllRoomUser();
+
+    @FormUrlEncoded
+    @POST("page_chat/get_user_by_room.php")
+    Call<ResponseBody> getUserByRoom(@Field("room") String room);
+
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     //예능채팅방
 
@@ -124,9 +132,5 @@ public interface ApiService {
     @FormUrlEncoded
     @POST("page_ent/get_room_by_user.php")
     Call<ResponseBody> getRoomByUser(@Field("nick") String nick);
-
-    @FormUrlEncoded
-    @POST("page_ent/get_user_by_room.php")
-    Call<ResponseBody> getUserByRoom(@Field("room") String room);
 
 }

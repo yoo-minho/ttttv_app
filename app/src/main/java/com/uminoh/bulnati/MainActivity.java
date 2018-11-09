@@ -1,7 +1,6 @@
 package com.uminoh.bulnati;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.NotificationManager;
@@ -11,10 +10,9 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.ResultReceiver;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -45,7 +43,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -69,7 +66,6 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
     Button weekButton5;
     Button weekButton6;
     Button weekButton7;
-    ImageButton updateButton;
     CardView chatRoomInfo;
     ListView listView = null;
     DrawerLayout drawer;
@@ -94,20 +90,21 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
             String getRoom = intent.getStringExtra("room");
             String getMsg = intent.getStringExtra("msg");
 //            Toast.makeText(getApplicationContext(), "<"+getRoom+">방에서 새메세지!", Toast.LENGTH_SHORT).show();
-            if(getMsg.equals("입장")){
-                for(int w = 0 ; w < dataList.size() ; w++){
-                    if(dataList.get(w).getProgramTitle().equals(getRoom)){
+
+            for(int w = 0 ; w < dataList.size() ; w++){
+
+                if(dataList.get(w).getProgramTitle().equals(getRoom)){
+                    if(getMsg.equals("입장")){
                         dataList.get(w).setTotal(dataList.get(w).getTotal()+1);
-                        adapter.notifyItemChanged(w);
-                    }
-                }
-            } else if (getMsg.equals("퇴장")){
-                for(int w = 0 ; w < dataList.size() ; w++){
-                    if(dataList.get(w).getProgramTitle().equals(getRoom)){
+                    } else if(getMsg.equals("퇴장")){
                         dataList.get(w).setTotal(dataList.get(w).getTotal()-1);
-                        adapter.notifyItemChanged(w);
                     }
+
+                    dataList.get(w).setMsgNew(dataList.get(w).getMsgNew()+1);
+
+                    adapter.notifyItemChanged(w);
                 }
+
             }
 
         }
@@ -151,7 +148,6 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
         weekButton4 = findViewById(R.id.week_button4);
         weekButton5 = findViewById(R.id.week_button5);
         weekButton6 = findViewById(R.id.week_button6);
-        updateButton = findViewById(R.id.update_button);
         chatRoomInfo = findViewById(R.id.chat_room_info);
         drawer = findViewById(R.id.drawer);
         menuButton = findViewById(R.id.menu_button);
@@ -161,7 +157,6 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
         lp = getSharedPreferences("login", MODE_PRIVATE);
         lEdit = lp.edit();
         nick = lp.getString("login_nick","");
-        Log.e("뭐니",nick);
         if(!lp.getBoolean("login_key",false)){
             Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
             startActivity(intent);
@@ -186,6 +181,7 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
                         , "  - 랜덤 영상 통화 (1대1)"
                         , "  - 연예인 닮은꼴 찾기"
                         , notiOn
+                        , "  - 문의하기"
                         , "  - 닉네임 변경"
                         , "  - 로그아웃"} ;
 
@@ -227,11 +223,19 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
 
                                 }
                                 break ;
-                            case 5 : // 닉네임변경
-                                Intent i4 = new Intent(getApplicationContext(), NickActivity.class);
-                                startActivity(i4);
+                            case 5 : // 문의하기
+                                Intent i5 = new Intent(Intent.ACTION_SEND);
+                                i5.setType("plain/text");
+                                String[] address = { "dellose@naver.com" } ;
+                                i5.putExtra(Intent.EXTRA_EMAIL, address); //배열을 받으므로 위와 같이 선언해야합니다.
+                                i5.putExtra(Intent.EXTRA_SUBJECT, "티티티티비에 이런 점을 문의합니다!");
+                                startActivityForResult(i5, 9991);
                                 break ;
-                            case 6 : // 로그아웃
+                            case 6 : // 닉네임변경
+                                Intent i6 = new Intent(getApplicationContext(), NickActivity.class);
+                                startActivity(i6);
+                                break ;
+                            case 7 : // 로그아웃
                                 logout();
                                 break ;}
                         drawer.closeDrawer(Gravity.RIGHT) ;
@@ -239,6 +243,18 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
                 });
 
                 drawer.openDrawer(listView);
+            }
+        });
+
+        menuButton.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                for(int j = 0 ; j < weekDay.length ; j++){
+                    onLoadProgram(weekDay[j]+"예능");
+                }
+                StyleableToast.makeText(getApplicationContext(), "방송 최신 정보를 가져옵니다!", Toast.LENGTH_SHORT,R.style.mytoast).show();
+                onLoadProgramRoom(clickToday);
+                return false;
             }
         });
 
@@ -267,8 +283,14 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
         //기본요소
         dataList = new ArrayList<>();
 
+        //요일별 클릭리스너
+        Calendar cal = Calendar.getInstance();
+        int num = cal.get(Calendar.DAY_OF_WEEK)-1;
+        today = weekDay[num];
+        clickToday = today+"예능";
+
         //리사이클러뷰 연결
-        adapter = new AdapterRecyclerProgram(this, dataList);
+        adapter = new AdapterRecyclerProgram(this, dataList, clickToday);
         RecyclerView recyclerView = findViewById(R.id.recycler_view);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
@@ -280,12 +302,6 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
 
         //상황에 따라 서비스 실행
         onService();
-
-        //요일별 클릭리스너
-        Calendar cal = Calendar.getInstance();
-        int num = cal.get(Calendar.DAY_OF_WEEK)-1;
-        today = weekDay[num];
-        clickToday = today+"예능";
         onLoadProgramRoom(today+"예능");
         onClickWeekColor(today+"예능");
         weekButton7.setOnClickListener(new View.OnClickListener() {
@@ -337,16 +353,6 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
                    }
        }
         );
-        updateButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                for(int j = 0 ; j < weekDay.length ; j++){
-                    onLoadProgram(weekDay[j]+"예능");
-                }
-                StyleableToast.makeText(getApplicationContext(), "방송 최신 정보를 가져옵니다!", Toast.LENGTH_SHORT,R.style.mytoast).show();
-                onLoadProgramRoom(clickToday);
-            }
-        });
 
     }
 
@@ -400,7 +406,8 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
                                                 jsonObject.getString("time"),
                                                 jsonObject.getInt("total"),
                                                 jsonObject.getString("intro"),
-                                                jsonObject.getString("rating")
+                                                jsonObject.getString("rating"),
+                                                lp.getInt(jsonObject.getString("title"),0)
                                         ));
                                     }
                                     adapter.notifyDataSetChanged();
@@ -446,16 +453,18 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
                 programRating.clear();
 
                 //image
-                Elements images = doc.select("div.wrap_thumb").select("img");
+                Elements images = doc.select("a.wrap_thumb").select("img");
                 for(Element element : images) {
+//                    Log.e("시작","이미지"+element.attr("src"));
                     imgUrl.add(element.attr("src"));
                 }
 
                 //title
-                Elements titles = doc.select("div.f_l > a");
+                Elements titles = doc.select("div.wrap_cont > strong");
                 for(int j = 0; j < titles.size() ; j++) {
                     Element element = titles.get(j);
                     programTitle.add(element.text());
+//                    Log.e("시작","타이틀"+element.text());
                     try {
                         String subUrl2 = URLEncoder.encode(element.text(),"UTF-8");
                         doc2 = Jsoup.connect(baseUrl+subUrl2).get();
@@ -466,14 +475,9 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
                             Element info = infos.get(k);
                             if(info.text().contains("소개")){
                                 programIntro.add(info.text());
+//                                Log.e("시작","인트로"+info.text());
                                 b = 1;
-                            } else if (info.text().contains("시청률")){
-                                programRating.add(info.text());
-                                a = 1;
                             }
-                        }
-                        if( a == 0){
-                            programRating.add("");
                         }
                         if( b == 0){
                             programIntro.add("");
@@ -485,13 +489,29 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
 
                 //broad
 
-                Elements broads = doc.select("div.f_l > dl");
+                Elements broads = doc.select("div.wrap_cont > span");
                 for(int k = 0; k < broads.size() ; k++) {
                     Element element = broads.get(k);
-                    if(element.className().equals("dl_comm channel_info")){
-                        broadcastStation.add(element.text());
-                    } else if (element.className().equals("dl_comm time_info")){
-                        programTime.add(element.text());
+                    if(k % 2 == 0 ){
+                        if(element.text().contains("오전") || element.text().contains("오후")
+                                || element.text().contains("낮") || element.text().contains("밤"))
+                        programTime.add(element.text().substring(4));
+//                        Log.e("시작","타임"+element.text().substring(4));
+                    } else {
+                        String[] s  = element.text().split(" ");
+                        if(s.length == 2){
+                            if(element.text().contains("%")){
+                                broadcastStation.add(s[0]);
+                                programRating.add(s[1]);
+                            } else {
+                                broadcastStation.add(s[0]+" "+s[1]);
+                                programRating.add("");
+                            }
+//                            Log.e("시작","브로드"+element.text());
+                        } else {
+                            broadcastStation.add(s[0]);
+                            programRating.add("");
+                        }
                     }
                 }
 
@@ -501,7 +521,7 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
             @Override
             protected void onPostExecute(Object o) {
                 super.onPostExecute(o);
-                for (int j = 0 ; j < programTitle.size(); j++){
+                for (int j = 0 ; j < imgUrl.size(); j++){
                     onCreateProgramRoom(week,
                             imgUrl.get(j),
                             broadcastStation.get(j),
@@ -585,6 +605,7 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
     protected void onRestart() {
         super.onRestart();
 
+        onService();
         roomList = lp.getString("room_list","");
         LocalBroadcastManager.getInstance(this).registerReceiver(mBroadcastReceiver,
                 new IntentFilter("blackJinData"));
@@ -659,14 +680,24 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
 
     private void onService(){
 
+        Intent i = new Intent(getApplicationContext(),MyChatService.class);
         if(lp.getBoolean("login_key",false)){
-            Intent i = new Intent(getApplicationContext(),MyChatService.class);
+
             if(!isMyServiceRunning(MyChatService.class)){
                 Log.e("스타트중아님,서비스시작","ㅋㅋ");
                 startService(i);
             } else {
                 Log.e("스타트중이라,서비스시작안함","ㅋㅋ");
             }
+        }
+
+        if(lp.getBoolean("receiver_dead",false)){
+            Log.e("데이터 문제 발생","재시작");
+            lEdit.putBoolean("receiver_dead",false);
+            lEdit.apply();
+            startService(i);
+        } else {
+            Log.e("데이터 문제 발생","없음");
         }
 
     }
@@ -717,6 +748,7 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
         onClickWeekColor(week);
         onLoadProgramRoom(week);
         clickToday = week;
+        adapter.onLoadWeek(clickToday);
     }
 
     //----------------------------------------------------------------------------------------------
@@ -758,7 +790,6 @@ public class MainActivity extends AppCompatActivity implements AdapterRecyclerPr
                     lEdit.apply();
 
                     String str2 = lp.getString("room_list","메롱");
-                    Log.e("결과값",str2);
 
                 } catch (IOException e) {
                     e.printStackTrace();

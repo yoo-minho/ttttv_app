@@ -154,11 +154,11 @@ public class CameraActivity extends AppCompatActivity implements CameraBridgeVie
                     String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
                     File file = new File(path, timeStamp+"cfr.jpeg");
                     String filename = file.toString();
-                    Imgproc.cvtColor(matResult, matResult, Imgproc.COLOR_BGR2RGB, 4);
-                    boolean ret  = Imgcodecs.imwrite( filename, matResult);
+                    Imgproc.cvtColor(matResult, matResult, Imgproc.COLOR_BGR2RGB, 0);
+                    boolean ret  = Imgcodecs.imwrite(filename, matResult);
                     if ( ret ) Log.d(TAG, "SUCCESS");
                     else Log.d(TAG, "FAIL");
-                    Intent mediaScanIntent = new Intent( Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                    Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
                     mediaScanIntent.setData(Uri.fromFile(file));
                     sendBroadcast(mediaScanIntent);
 

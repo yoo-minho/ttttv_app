@@ -3,11 +3,15 @@ package com.uminoh.bulnati;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
+import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import com.uminoh.bulnati.RecyclerUtil.MyGuideViewPagerAdapter;
 
 import java.io.IOException;
 
@@ -19,6 +23,8 @@ import retrofit2.Retrofit;
 
 public class LoginActivity extends AppCompatActivity {
 
+    //가이드 뷰페이져
+    ViewPager viewPager;
 
     EditText id_edit;
     EditText pw_edit;
@@ -55,6 +61,11 @@ public class LoginActivity extends AppCompatActivity {
         //주소를 기반으로 객체 생성
         retrofit = new Retrofit.Builder().baseUrl(ApiService.API_URL).build();
         apiService = retrofit.create(ApiService.class);
+
+        //뷰페이져 연결
+        viewPager = findViewById(R.id.view_pager);
+        MyGuideViewPagerAdapter adapter = new MyGuideViewPagerAdapter(getApplicationContext());
+        viewPager.setAdapter(adapter);
 
         //로그인버튼
         login_bn.setOnClickListener(new View.OnClickListener() {
@@ -107,8 +118,7 @@ public class LoginActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent(getApplicationContext(), JoinActivity.class);
-                startActivity(intent);
-                finish();
+                startActivityForResult(intent, 1111);
             }
         });
 
@@ -116,6 +126,15 @@ public class LoginActivity extends AppCompatActivity {
 
     //----------------------------------------------------------------------------------------------
     //테스트를 위한 로그인 기능
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == 1111 && resultCode == RESULT_OK){
+            String getId = data.getStringExtra("id");
+            id_edit.setText(getId);
+        }
+    }
 
     public void a_login(View view) {
         Toast.makeText(getBaseContext(), "[에이네임]님! 로그인 성공!", Toast.LENGTH_SHORT).show();

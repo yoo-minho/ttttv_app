@@ -15,7 +15,7 @@
         android:layout_height="50dp"
         android:background="@color/white"
         android:gravity="center"
-        android:text="랜덤 영상 통화 (1대1)"
+        android:text="랜덤 영상 통화 (1대1) Beta"
         android:textSize="22sp"
         android:textStyle="bold" />
 

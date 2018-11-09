@@ -9,8 +9,8 @@
 
     <ImageView
         android:id="@+id/ent_imgView"
-        android:layout_width="96dp"
-        android:layout_height="136dp"
+        android:layout_width="192dp"
+        android:layout_height="272dp"
         android:layout_gravity="center"
         android:layout_marginBottom="8dp"
         android:scaleType="centerCrop"

@@ -1,7 +1,5 @@
 package com.uminoh.bulnati;
 
-import java.net.Socket;
-
 public class SecretKey {
 
     public static String ip = "18.182.54.93";

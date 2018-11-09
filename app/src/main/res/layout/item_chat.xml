@@ -76,7 +76,7 @@
 
         <android.support.constraint.ConstraintLayout
             android:id="@+id/layout_you"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="right"
             android:layout_weight="1">
@@ -84,51 +84,45 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:orientation="horizontal">
+                android:layout_weight="1"
+                android:orientation="vertical">
 
-                <LinearLayout
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
+                <TextView
+                    android:id="@+id/nickname_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="10dp"
+                    android:text="상대방"
+                    android:textColor="@color/chat_you"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/bubble_you_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="10dp"
+                    android:layout_weight="0.5"
+                    android:autoLink="all"
+                    android:background="@color/chat_you"
+                    android:maxWidth="250dp"
+                    android:minWidth="100dp"
+                    android:padding="5dp"
+                    android:text="zzzz"
+                    android:textSize="15sp" />
+
+                <TextView
+                    android:id="@+id/date_text_you"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
                     android:layout_weight="1"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/nickname_text"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:paddingLeft="10dp"
-                        android:text="상대방"
-                        android:textColor="@color/chat_you"
-                        android:textSize="13sp" />
-
-                    <TextView
-                        android:id="@+id/bubble_you_text"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginLeft="10dp"
-                        android:layout_weight="0.5"
-                        android:background="@color/chat_you"
-                        android:maxWidth="250dp"
-                        android:minWidth="100dp"
-                        android:padding="5dp"
-                        android:text="zz"
-                        android:textSize="15sp" />
-
-                    <TextView
-                        android:id="@+id/date_text_you"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
-                        android:layout_weight="1"
-                        android:background="@color/chat_you"
-                        android:gravity="bottom|left"
-                        android:paddingBottom="3dp"
-                        android:paddingStart="10dp"
-                        android:text="오후 2:57"
-                        android:textColor="@color/md_grey_500"
-                        android:textSize="10sp" />
-
-                </LinearLayout>
+                    android:background="@color/chat_you"
+                    android:gravity="bottom|left"
+                    android:paddingBottom="3dp"
+                    android:paddingStart="10dp"
+                    android:text="오후 2:57"
+                    android:textColor="@color/md_grey_500"
+                    android:textSize="10sp" />
 
             </LinearLayout>
 
@@ -136,20 +130,20 @@
 
         <android.support.constraint.ConstraintLayout
             android:id="@+id/layout_me"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
                 android:orientation="vertical"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintHorizontal_bias="1.0"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="1.0">
+                app:layout_constraintVertical_bias="0.0">
 
                 <TextView
                     android:id="@+id/nickname_text2"
@@ -168,6 +162,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginRight="10dp"
                     android:layout_weight="0.5"
+                    android:autoLink="all"
                     android:background="@color/chat_me"
                     android:maxWidth="250dp"
                     android:minWidth="100dp"

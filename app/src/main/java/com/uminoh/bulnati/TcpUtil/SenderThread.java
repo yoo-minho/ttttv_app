@@ -20,6 +20,7 @@ public class SenderThread extends Thread {
     public void close() {
         try {
             socket.close();
+            Log.e(socket.toString(),"센더소켓종료");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -28,7 +29,6 @@ public class SenderThread extends Thread {
     public void sendMessage(final String message, final String room) {
 
         Log.e("센드 메시지", message+"/"+room);
-
         new Thread(new Runnable() {
             @Override
             public void run() {

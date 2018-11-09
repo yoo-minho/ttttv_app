@@ -9,8 +9,9 @@ public class DataProgram {
     private int total;
     private String programIntro;
     private String programRating;
+    private int msgNew;
 
-    public DataProgram(String imgUrl, String broadcastStation, String programTitle, String programTime, int total, String programIntro, String programRating) {
+    public DataProgram(String imgUrl, String broadcastStation, String programTitle, String programTime, int total, String programIntro, String programRating, int msgNew) {
         this.imgUrl = imgUrl;
         this.broadcastStation = broadcastStation;
         this.programTitle = programTitle;
@@ -18,6 +19,7 @@ public class DataProgram {
         this.total = total;
         this.programIntro = programIntro;
         this.programRating = programRating;
+        this.msgNew = msgNew;
     }
 
     public String getImgUrl() {
@@ -68,6 +70,14 @@ public class DataProgram {
 
     public void setProgramRating(String programRating) {
         this.programRating = programRating;
+    }
+
+    public int getMsgNew() {
+        return msgNew;
+    }
+
+    public void setMsgNew(int msgNew) {
+        this.msgNew = msgNew;
     }
 
 

@@ -89,7 +89,7 @@ Java_com_uminoh_bulnati_CameraActivity_detect(JNIEnv *env, jobject instance,
         Point center( real_facesize_x + real_facesize_width / 2, real_facesize_y + real_facesize_height/2);
 //        ellipse(img_result, center, Size( real_facesize_width / 2, real_facesize_height / 2), 0, 0, 360, Scalar(5, 235, 101), 30, 8, 0);
         Rect face_area(real_facesize_x, real_facesize_y, real_facesize_width,real_facesize_height);
-        rectangle(img_result, face_area, Scalar(33, 197, 102),10,8,0);
+        rectangle(img_result, face_area, Scalar(33, 197, 102),5,8,0);
         Mat faceROI = img_gray( face_area );
 
 //        std::vector<Rect> eyes;

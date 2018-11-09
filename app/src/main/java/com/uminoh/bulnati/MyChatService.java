@@ -35,7 +35,6 @@ public class MyChatService extends Service implements ReceiverThread.OnReceiveLi
     private Socket mSocket = null;
     Thread tr;
     ReceiverThread thread2;
-    Intent i;
 
     //쉐어드프리퍼런스 : 로그인 유지 및 로드
     SharedPreferences lp;
@@ -77,8 +76,6 @@ public class MyChatService extends Service implements ReceiverThread.OnReceiveLi
     @Override
     public int onStartCommand(final Intent intent, int flags, int startId) {
 
-        i=intent;
-
         //소켓생성
         new Thread(new Runnable() {
             @Override
@@ -86,7 +83,9 @@ public class MyChatService extends Service implements ReceiverThread.OnReceiveLi
                 try {
 
                     mSocket = new Socket(SecretKey.ip, SecretKey.port);
-                    thread2 = new ReceiverThread(mSocket, login_nick+">리시버");
+                    Log.e(mSocket.toString(),"서비스소켓시작");
+
+                    thread2 = new ReceiverThread(mSocket, login_nick+">리시버", MyChatService.this);
                     thread2.setOnReceiveListener(MyChatService.this);
                     thread2.start();
 
@@ -105,9 +104,21 @@ public class MyChatService extends Service implements ReceiverThread.OnReceiveLi
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (thread2 != null) {
-            thread2.interrupt();
+
+        try {
+            if(mSocket != null){
+                mSocket.close();
+                Log.e(mSocket.toString(),"서비스소켓종료");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+
+        if(thread2 != null){
+            thread2.interrupt();
+            Log.e(mSocket.toString(),"리시버종료");
+        }
+
     }
 
     //----------------------------------------------------------------------------------------------
@@ -132,6 +143,8 @@ public class MyChatService extends Service implements ReceiverThread.OnReceiveLi
 
         //필터링 하지 않아도 됨, if(room_list.contains(room))
 
+
+
         if (isAppIsInBackground(getApplicationContext())) {
 
             notiOn = lp.getString("noti_on","  - 메시지 알람 Off");
@@ -150,6 +163,9 @@ public class MyChatService extends Service implements ReceiverThread.OnReceiveLi
             LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
 
         }
+
+        lEdit.putInt(room, lp.getInt(room,0)+1);
+        lEdit.apply();
 
     }
 
@@ -226,23 +242,6 @@ public class MyChatService extends Service implements ReceiverThread.OnReceiveLi
         }
 
         return isInBackground;
-    }
-
-    //----------------------------------------------------------------------------------------------
-    //서비스에서 토스트 사용
-
-    private class ToastRunnable implements Runnable {
-
-        String mText;
-
-        public ToastRunnable(String text) {
-            mText = text;
-        }
-
-        @Override
-        public void run(){
-            StyleableToast.makeText(getApplicationContext(), mText, Toast.LENGTH_SHORT, R.style.mytoast).show();
-        }
     }
 
     //----------------------------------------------------------------------------------------------

@@ -9,12 +9,15 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.widget.NestedScrollView;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.OrientationHelper;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -62,6 +65,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     SwipeRefreshLayout refreshLayout;
     TextView chat_room_id;
     ImageButton exitChat;
+    ImageButton userListButton;
     Button sendButton;
     EditText mMessageEditText;
 
@@ -75,10 +79,14 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
     private AdapterRecyclerChat mAdapter;
     private List<DataChat> mChatDataList;
     RecyclerView recyclerView;
+    //NestedScrollView nestView;
 
     //페이징 (페이징 변수, 한 번에 로드할 페이지 수)
     private int page = 0;
     private final int OFFSET = 15;
+
+    //List Dialog Adapter
+    ArrayAdapter<String> adapter;
 
     //메시지 보내기 (소켓, 보내기쓰레드, 보내는 메시지창)
     private Socket mSocket = null;
@@ -121,6 +129,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         chat_room_id = findViewById(R.id.chat_room_name);
         exitChat = findViewById(R.id.exit_chat);
         sendButton = findViewById(R.id.send_button);
+        userListButton = findViewById(R.id.user_list_button);
 
         //요소 세팅 (룸네임겟, 현재시간, 풀투리프레시, 룸네임입력, 센드클릭리스너, 노티표시, 노티클릭리스너)
         room_name = getIntent().getStringExtra("program");
@@ -138,6 +147,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                 refreshLayout.setRefreshing(false);
             }
         });
+
         refreshLayout.setColorSchemeResources(
                 android.R.color.holo_blue_bright,
                 android.R.color.holo_green_light,
@@ -154,13 +164,18 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
         sendButton.setOnClickListener(this);
 
         //리사이클러뷰 연결
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this, OrientationHelper.VERTICAL, false);
         mChatDataList = new ArrayList<>();
         mAdapter = new AdapterRecyclerChat(getApplicationContext(), mChatDataList);
         mAdapter.setOnClickListener(this);
+
+        //nestView = findViewById(R.id.nest_view2);
+
         recyclerView = findViewById(R.id.chat_recycler_view);
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setAdapter(mAdapter);
+
+
 
         //페이징
         getPaging("first");
@@ -172,8 +187,9 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void run() {
                 try {
-                    mSocket = new Socket(SecretKey.ip , SecretKey.port);
 
+                    mSocket = new Socket(SecretKey.ip , SecretKey.port);
+                    Log.e(mSocket.toString(),"센더소켓시작");
                     // 두번째 파라메터 로는 본인의 닉네임을 적어줍니다.
                     mThread1 = new SenderThread(mSocket, login_nick+">센더");
                     mThread1.start();
@@ -197,18 +213,25 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                             new DialogInterface.OnClickListener() {
                                 public void onClick(
                                         DialogInterface dialog, int id) {
-                                    onChatStr("입장",login_nick ,date_str, -1);
-                                    mThread1.sendMessage("입장",room_name);
-                                    Call<ResponseBody> save_chat = apiService.saveChat("입장",login_nick,date_str,room_name);
-                                    save_chat.enqueue(new Callback<ResponseBody>() {
-                                        @Override
-                                        public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
 
-                                        }
-                                        @Override
-                                        public void onFailure(Call<ResponseBody> call, Throwable t) {
-                                        }
-                                    });
+                                    if(mThread1 != null) {
+                                        onChatStr("입장", login_nick, date_str, -1);
+                                        mThread1.sendMessage("입장", room_name);
+                                        Call<ResponseBody> save_chat = apiService.saveChat("입장", login_nick, date_str, room_name);
+                                        save_chat.enqueue(new Callback<ResponseBody>() {
+                                            @Override
+                                            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+
+                                            }
+
+                                            @Override
+                                            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                                            }
+                                        });
+                                    } else {
+                                        StyleableToast.makeText(ChatActivity.this, "서버가 불안정합니다! 다시 접속해주세요!", Toast.LENGTH_SHORT, R.style.mytoast).show();
+                                        finish();
+                                    }
                                 }
                             });
 
@@ -239,33 +262,38 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                                     public void onClick(
                                             DialogInterface dialog, int id) {
 
-                                        Call<ResponseBody> exit_chat = apiService.exitChat(room_name, login_nick, date_str);
-                                        exit_chat.enqueue(new Callback<ResponseBody>() {
-                                            @Override
-                                            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                                                try {
-                                                    String str = response.body().string();
-                                                    Log.e("exit",str);
-                                                    if(str.equals("success")){
+                                        if(mThread1 != null){
+                                            Call<ResponseBody> exit_chat = apiService.exitChat(room_name, login_nick, date_str);
+                                            exit_chat.enqueue(new Callback<ResponseBody>() {
+                                                @Override
+                                                public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                                                    try {
+                                                        String str = response.body().string();
+                                                        Log.e("exit",str);
+                                                        if(str.equals("success")){
 
-                                                        lEdit.putString("room_list",lp.getString("room_list","").replace("/"+room_name,""));
-                                                        lEdit.apply();
-                                                        onChatStr("퇴장",login_nick ,date_str, -1);
-                                                        mThread1.sendMessage("퇴장",room_name);
-                                                        onBackPressed();
+                                                            mThread1.sendMessage("퇴장",room_name);
+                                                            lEdit.putString("room_list",lp.getString("room_list","").replace("/"+room_name,""));
+                                                            lEdit.apply();
+                                                            onChatStr("퇴장",login_nick ,date_str, -1);
+                                                            onBackPressed();
 
+                                                        }
+                                                    } catch (IOException e) {
+                                                        e.printStackTrace();
                                                     }
-                                                } catch (IOException e) {
-                                                    e.printStackTrace();
                                                 }
-                                            }
 
-                                            @Override
-                                            public void onFailure(Call<ResponseBody> call, Throwable t) {
+                                                @Override
+                                                public void onFailure(Call<ResponseBody> call, Throwable t) {
 
-                                            }
-                                        });
-                                        onExit();
+                                                }
+                                            });
+                                        } else {
+                                            StyleableToast.makeText(ChatActivity.this, "서버가 불안정합니다! 다시 접속해주세요!", Toast.LENGTH_SHORT, R.style.mytoast).show();
+                                            finish();
+                                        }
+
                                     }
                                 })
                         .setNegativeButton("보류",
@@ -281,6 +309,94 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
 
                 // 다이얼로그 보여주기
                 alertDialog2.show();
+
+            }
+        });
+
+        exitChat.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View view) {
+                Call<ResponseBody> get_all_room_user = apiService.getAllRoomUser();
+                get_all_room_user.enqueue(new Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                        try {
+                            String str = response.body().string();
+                            mThread1.sendMessage(str, "룸셋");
+                            Log.e("룸셋",str);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+                    }
+                });
+                return false;
+            }
+        });
+
+        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1);
+
+        userListButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                adapter.clear();
+                Call<ResponseBody> get_user_by_room = apiService.getUserByRoom(room_name);
+                get_user_by_room.enqueue(new Callback<ResponseBody>() {
+                    @Override
+                    public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                        try {
+                            String str = response.body().string();
+                            Log.e("유저리스트",str);
+                            String[] users = str.split("/");
+
+                            if(users.length != 0 ){
+                                for (int k = 0 ; k < users.length ; k++){
+                                    if(users[k].equals(login_nick)){
+                                        adapter.add(users[k]+" (★본인★)");
+                                    } else {
+                                        adapter.add(users[k]);
+                                    }
+                                }
+                            } else {
+                                adapter.add("유저 없음");
+                            }
+
+                            adapter.notifyDataSetChanged();
+
+                            final AlertDialog.Builder alert = new AlertDialog.Builder(ChatActivity.this);
+                            alert.setTitle("유저리스트 ("+users.length+"명, 첫번째부터 입장순)");     //타이틀
+                            alert.setIcon(R.drawable.ic_people_black_24dp); //아이콘
+                            alert.setAdapter(adapter, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                  Log.e("유저선택",adapter.getItem(i));
+                                  dialogInterface.dismiss();
+                                }
+                            });
+                            alert.setNegativeButton("뒤로", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    dialogInterface.dismiss();
+                                }
+                            });
+
+                            alert.show();
+
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+                    }
+                });
 
             }
         });
@@ -327,14 +443,28 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                Boolean isMe = login_nick.equals(nick);
-                if( i == -1 ){
-                    mChatDataList.add(new DataChat(msg,nick,isMe,date));
+
+                int type;
+                if(login_nick.equals(nick)){
+                    type = DataChat.ME_TYPE;
                 } else {
-                    mChatDataList.add(i,new DataChat(msg,nick,isMe,date));
+                    if(msg.equals("입장") || msg.equals("퇴장")){
+                        type = DataChat.ENTRY_TYPE;
+                    } else {
+                        type = DataChat.YOU_TYPE;
+                    }
                 }
+
+                if( i == -1 ){
+                    mChatDataList.add(new DataChat(type,msg,nick,date));
+                } else {
+                    mChatDataList.add(i,new DataChat(type,msg,nick,date));
+                }
+
                 mAdapter.notifyDataSetChanged();
                 recyclerView.scrollToPosition(mAdapter.getItemCount()-1);
+                //nestView.fullScroll(View.FOCUS_DOWN);
+                //nestView.scrollTo(0,0)
                 }
             });
         }
@@ -346,27 +476,22 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     protected void onDestroy() {
+        super.onDestroy();
+
         try {
-            mSocket.close();
+            if(mSocket != null){
+                mSocket.close();
+                Log.e(mSocket.toString(),"채팅방소켓종료");
+            }
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (NullPointerException e){
-            e.printStackTrace();
         }
-        super.onDestroy();
+
+        if(mThread1 != null){
+            mThread1.close();
+        }
+
         LocalBroadcastManager.getInstance(this).unregisterReceiver(mBroadcastReceiver);
-    }
-
-    //----------------------------------------------------------------------------------------------
-    //리스트확인 서비스종료
-
-    @Override
-    protected void onRestart() {
-        super.onRestart();
-
-//        Intent intent = new Intent(getApplicationContext(),MyChatService.class);
-//        Log.e("MyChatService","START!!!");
-//        startService(intent);
 
     }
 
@@ -393,7 +518,7 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
                     int chat_num = 0;
 
                     String str = response.body().string();
-                    Log.e("리절틑로로로",str);
+//                    Log.e("리절틑로로로",str);
                     JSONArray jsonArray = new JSONArray(str);
                     if (jsonArray.length() - (OFFSET * (page + 1)) >= 0) {
                         start_num = jsonArray.length() - (OFFSET * (page + 1));
@@ -460,11 +585,14 @@ public class ChatActivity extends AppCompatActivity implements View.OnClickListe
 
     //----------------------------------------------------------------------------------------------
 
-    private void onExit(){
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
 
+        lEdit.putInt(room_name, 0);
+        lEdit.apply();
     }
-
 }
 
 

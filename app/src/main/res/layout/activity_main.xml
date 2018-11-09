@@ -48,20 +48,12 @@
                     android:id="@+id/reload"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:layout_weight="0.4"
+                    android:layout_weight="0.3"
                     android:background="@color/white"
                     android:gravity="center"
                     android:text="예능별 오픈채팅"
                     android:textSize="22sp"
                     android:textStyle="bold" />
-
-                <ImageButton
-                    android:id="@+id/update_button"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
-                    android:background="@color/white"
-                    app:srcCompat="@drawable/ic_update_black_24dp" />
 
                 <ImageButton
                     android:id="@+id/menu_button"

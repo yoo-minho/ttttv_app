@@ -1,5 +1,6 @@
 package com.uminoh.bulnati.TcpUtil;
 
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
@@ -9,6 +10,11 @@ import java.io.PrintWriter;
 import java.net.Socket;
 
 public class ReceiverThread extends Thread {
+
+    //쉐어드프리퍼런스 : 로그인 유지
+    SharedPreferences lp;
+    SharedPreferences.Editor lEdit;
+    Context context;
 
     public interface OnReceiveListener {
         void onReceive(String message, String listener);
@@ -24,9 +30,14 @@ public class ReceiverThread extends Thread {
     private String name;
     private PrintWriter mWriter;
 
-    public ReceiverThread(Socket socket, String name) {
+    public ReceiverThread(Socket socket, String name, Context context) {
         this.socket = socket;
         this.name = name;
+        this.context = context;
+
+        //쉐어드프리퍼런스 연결
+        lp = context.getSharedPreferences("login", Context.MODE_PRIVATE);
+        lEdit = lp.edit();
     }
 
     @Override
@@ -49,8 +60,13 @@ public class ReceiverThread extends Thread {
                     break;
                 }
             }
+
         } catch (Exception e) {
+
             Log.e("chat", "run: " + e.getMessage());
+            lEdit.putBoolean("receiver_dead",true);
+            lEdit.apply();
+
         }
     }
 

@@ -25,6 +25,7 @@
         android:glEsVersion="0x00020000"
         android:required="true" />
 
+
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CAMERA" />
@@ -41,9 +42,9 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher_ttttv"
+        android:icon="@mipmap/ttttv_logo"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_ttttv"
+        android:roundIcon="@mipmap/ttttv_logo"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <provider
