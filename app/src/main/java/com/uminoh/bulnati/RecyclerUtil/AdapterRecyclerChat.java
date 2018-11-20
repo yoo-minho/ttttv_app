@@ -47,39 +47,6 @@ public class AdapterRecyclerChat extends RecyclerView.Adapter {
         mListener = listener;
     }
 
-    //----------------------------------------------------------------------------------------------
-    //뷰홀더(=틀, 리사이클러뷰 틀에 쓰일 아이템 선언)
-
-//    public static class ViewHolder extends RecyclerView.ViewHolder {
-//
-//        ConstraintLayout layoutMe;
-//        ConstraintLayout layoutYou;
-//        TextView nickname;
-//        TextView bubbleYou;
-//        TextView bubbleMe;
-//        TextView dateYou;
-//        TextView dateMe;
-//        TextView entText;
-//        TextView entText2;
-//        TextView entText3;
-//        LinearLayout entLinear;
-//
-//        //뷰홀더와 뷰 연결
-//        MeViewHolder(@NonNull View itemView) {
-//            super(itemView);
-//            layoutMe = itemView.findViewById(R.id.layout_me);
-//            layoutYou = itemView.findViewById(R.id.layout_you);
-//            nickname = itemView.findViewById(R.id.nickname_text);
-//            bubbleYou = itemView.findViewById(R.id.bubble_you_text);
-//            bubbleMe = itemView.findViewById(R.id.bubble_me_text);
-//            dateYou = itemView.findViewById(R.id.date_text_you);
-//            dateMe = itemView.findViewById(R.id.date_text_me);
-//            entText = itemView.findViewById(R.id.ent_text);
-//            entText2 = itemView.findViewById(R.id.ent_text2);
-//            entText3 = itemView.findViewById(R.id.ent_text3);
-//            entLinear = itemView.findViewById(R.id.ent_linear);
-//        }
-//    }
 
     public static class MeViewHolder extends RecyclerView.ViewHolder {
 
